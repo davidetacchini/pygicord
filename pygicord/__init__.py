@@ -23,7 +23,7 @@ SOFTWARE.
 """
 
 import asyncio
-from typing import Optional, Union
+from typing import Union, Optional
 from contextlib import suppress
 
 import discord
