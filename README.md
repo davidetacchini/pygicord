@@ -109,7 +109,7 @@ bot.run("token")
 | timeout         | The timeout before the paginator's reactions will be cleared.                                                                       | float               | 90.0    | No       |
 | compact         | Whether the paginator should use a compact version of itself having only three reactions: previous, close and next.                 | bool                | False   | No       |
 | go_back_timeout | The amount of seconds that redirects to the previously visited page when using :attr:`help_embed` section.                          | float               | 30.0    | No       |
-| indicator       | Whether to display an indicator. It is used to display a message when reactions are loading or when the bot lacks ``Add Reactions`` | bool                | True    | No       |
+| indicator       | Whether to display an indicator. It is used to display a message when reactions are loading or when the bot lacks ``Add Reactions`` permission. | bool                | True    | No       |
 | load_message    | The message displayed when reactions are loading.                                                                                   | str                 | Custom  | Yes      |
 | fail_message    | The message displayed when the bot can't add reactions in the channel.                                                              | str                 | Custom  | Yes      |
 | has_help        | Whether to add a new reaction for the help section.                                                                                 | bool                | True    | No       |
@@ -137,7 +137,7 @@ embed.add_field(name="Reactions", value=reactions_help)
 
 ### Loading message
 ```
-**Adding reactions**
+**Adding reactions...**
 ```
 
 ### Failed message
