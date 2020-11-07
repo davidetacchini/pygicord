@@ -1,5 +1,10 @@
 # Pygicord
-<img src="https://github.com/davidetacchini/pygicord/workflows/CI/badge.svg" alt="Build">
+<a href="https://github.com/davidetacchini/pygicord/actions" traget="_blank">
+	<img src="https://github.com/davidetacchini/pygicord/workflows/CI/badge.svg" alt="Build">
+</a>
+<a href="https://pypi.org/project/pygicord" traget="_blank">
+	<img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dm/pygicord">
+</a>
 
 An easy-to-use pagination wrapper for discord.py library.
 
