@@ -58,10 +58,6 @@ class Paginator:
         Whether the paginator should use a compact version of itself
         having only three reactions: previous, close and next.
         Defaults to ``False``.
-    go_back_timeout: :class:`float`
-        The amount of seconds that redirects to the previously visited page
-        when using :attr:`help_embed` section.
-        Defaults to ``30.0``.
     indicator: :class:`bool`
         Whether to display an indicator. It is used to display a message
         when reactions are loading or when the bot lacks ``Add Reactions``
@@ -70,23 +66,15 @@ class Paginator:
         The message displayed when reactions are loading.
     fail_message: :class:`str`
         The message displayed when the bot can't add reactions in the channel.
-    has_help: :class:`bool`
-        Whether to add a new reaction for the help section.
-        Defaults to ``True``.
-    help_embed: Optional[:class:`discord.Embed`]
-        A custom embed for the paginator help section.
     """
 
     __slots__ = (
         "pages",
         "timeout",
         "compact",
-        "go_back_timeout",
         "indicator",
         "_load_message",
         "_fail_message",
-        "has_help",
-        "_help_embed",
         "embeds",
         "embed",
         "loop",
@@ -104,17 +92,13 @@ class Paginator:
         pages: Optional[Union[list, discord.Embed]] = None,
         compact: bool = False,
         timeout: float = 90.0,
-        go_back_timeout: float = 30.0,
         indicator: bool = True,
-        has_help: bool = True,
         **kwargs
     ):
         self.pages = pages
         self.compact = compact
         self.timeout = timeout
-        self.go_back_timeout = go_back_timeout
         self.indicator = indicator
-        self.has_help = has_help
 
         try:
             load_message = kwargs["load_message"]
@@ -130,13 +114,6 @@ class Paginator:
         else:
             self.fail_message = fail_message
 
-        try:
-            help_embed = kwargs["help_embed"]
-        except KeyError:
-            pass
-        else:
-            self.help_embed = help_embed
-
         self.embeds = []
         self.embed = None
         self.loop = None
@@ -151,15 +128,11 @@ class Paginator:
             "⏹️": "close",
             "▶": +1,
             "⏭": None,
-            "❔": "help",
         }
 
         if self.compact is True:
             del self.__reactions["⏮"]
             del self.__reactions["⏭"]
-
-        if self.has_help is False:
-            del self.__reactions["❔"]
 
     @property
     def load_message(self):
@@ -194,48 +167,9 @@ class Paginator:
                 % value.__class__.__name__
             )
 
-    def default_help_embed(self):
-        embed = discord.Embed(color=discord.Colour.blurple())
-        embed.title = "Paginator Help"
-        embed.description = "Welcome to the paginator help!"
-        reactions_help = (
-            "⏮: Go to the first page\n"
-            "◀: Go to the previous page\n"
-            "⏹️: Close the paginator\n"
-            "▶: Go to the next page\n"
-            "⏭: Go to the last page\n"
-            "❔: Shows this page"
-        )
-        embed.add_field(name="Reactions", value=reactions_help)
-        return embed
-
-    @property
-    def help_embed(self):
-        default = self.default_help_embed()
-        return getattr(self, "_help_embed", default)
-
-    @help_embed.setter
-    def help_embed(self, value):
-        if isinstance(value, discord.Embed):
-            self._help_embed = value
-        else:
-            raise ValueError(
-                "help_embed must be an instance of <class 'discord.Embed'> not %s"
-                % value.__class__.__name__
-            )
-
-    async def go_back(self):
-        await asyncio.sleep(self.go_back_timeout)
-        with suppress(discord.HTTPException, discord.NotFound):
-            await self.embed.edit(embed=self.embeds[self.current])
-
-    async def reference(self, ctx, react):
+    async def controller(self, ctx, react):
         if react == "close":
             self.loop.create_task(self.close_paginator(self.embed))
-
-        elif react == "help":
-            await self.embed.edit(embed=self.help_embed)
-            self.loop.create_task(self.go_back())
 
         elif isinstance(react, int):
             self.current += react
@@ -263,7 +197,7 @@ class Paginator:
                     # Failed to add reactions
                     return
             if self.indicator is True:
-                # Remove loading message after every reaction has been added
+                # Remove indicator
                 await self.embed.edit(content=None)
 
         def check(r, u):
@@ -290,7 +224,7 @@ class Paginator:
                 await self.embed.remove_reaction(react, user)
 
             self.previous = self.current
-            await self.reference(ctx, reaction)
+            await self.controller(ctx, reaction)
 
             if self.previous == self.current:
                 continue
