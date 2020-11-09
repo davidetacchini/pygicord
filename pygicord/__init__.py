@@ -89,7 +89,7 @@ class Paginator:
     def __init__(
         self,
         *,
-        pages: Optional[Union[list, discord.Embed]] = None,
+        pages: Optional[Union[list[discord.Embed], discord.Embed]] = None,
         compact: bool = False,
         timeout: float = 90.0,
         indicator: bool = True,
