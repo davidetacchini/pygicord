@@ -1,3 +1,8 @@
+.PHONY: clean
+clean:
+	rm -rf ./__pycache__
+	rm -rf */__pycache__
+
 .PHONY: install
 install:
 	@pip install --upgrade pip

@@ -93,7 +93,7 @@ class Paginator:
         compact: bool = False,
         timeout: float = 90.0,
         indicator: bool = True,
-        **kwargs
+        **kwargs,
     ):
         self.pages = pages
         self.compact = compact
@@ -128,15 +128,21 @@ class Paginator:
             "⏹️": "close",
             "▶": +1,
             "⏭": None,
+            "🔢": "input",
         }
+
+        if self.pages is not None:
+            if len(self.pages) == 2:
+                self.compact = True
 
         if self.compact is True:
             del self.__reactions["⏮"]
             del self.__reactions["⏭"]
+            del self.__reactions["🔢"]
 
     @property
     def load_message(self):
-        default = "**Adding reactions...**"
+        default = "Adding reactions..."
         return getattr(self, "_load_message", default)
 
     @load_message.setter
@@ -167,9 +173,45 @@ class Paginator:
                 % value.__class__.__name__
             )
 
+    def got_to_page(self, number):
+        if number > int(self.end) + 1:
+            page = int(self.end) + 1
+        else:
+            page = number
+        self.current = page - 1
+
     async def controller(self, ctx, react):
         if react == "close":
             self.loop.create_task(self.close_paginator(self.embed))
+
+        elif react == "input":
+            to_delete = []
+            to_delete.append(
+                await ctx.send(
+                    f"What page do you want to go to? *Choose between 1 and {int(self.end) + 1}*"
+                )
+            )
+
+            def check(m):
+                return (
+                    m.author.id == ctx.author.id
+                    and ctx.channel.id == m.channel.id
+                    and m.content.isdigit()
+                )
+
+            try:
+                message = await ctx.bot.wait_for("message", check=check, timeout=30.0)
+            except asyncio.TimeoutError:
+                to_delete.append(
+                    await ctx.send("You took too long to choose a number.")
+                )
+                await asyncio.sleep(5)
+            else:
+                to_delete.append(message)
+                self.got_to_page(int(message.content))
+
+            with suppress(Exception):
+                await ctx.channel.delete_messages(to_delete)
 
         elif isinstance(react, int):
             self.current += react
@@ -201,7 +243,9 @@ class Paginator:
                 await self.embed.edit(content=None)
 
         def check(r, u):
-            if u.id == ctx.bot.user.id or r.message.id != self.embed.id:
+            if u.id == ctx.bot.user.id:
+                return False
+            if r.message.id != self.embed.id:
                 return False
             elif str(r) not in self.__reactions.keys():
                 return False
