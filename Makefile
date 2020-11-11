@@ -13,9 +13,3 @@ format:
 	isort .
 	black --exclude=env --line-length=88 .
 	flake8 .
-
-.PHONY: deploy
-deploy:
-	rm -rf dist
-	python setup.py sdist bdist_wheel
-	twine upload dist/*
