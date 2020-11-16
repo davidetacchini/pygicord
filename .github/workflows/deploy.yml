@@ -1,12 +1,12 @@
-name: CI
+name: Deploy
 
 on:
   release:
-    types: [created]
+    types: 
+      - created
 
 jobs:
-  deploy:
-    name: Deploy
+  build:
     runs-on: ubuntu-latest
     
     steps:
