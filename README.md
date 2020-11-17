@@ -24,7 +24,7 @@ pip install pygicord
 
 The following examples help you understand how pygicord works.
 
-### Basic paginator:
+### Basic paginator
 
 ```py
 import discord
@@ -37,10 +37,9 @@ bot = commands.Bot(command_prefix=".")
 
 def make_pages():
     pages = []
-    # Generate a list of 5 embeds
+    # Generate a list of 5 embed instances
     for i in range(1, 6):
         embed = discord.Embed()
-        embed.color = discord.Color.blurple()
         embed.title = f"I'm the embed {i}!"
         pages.append(embed)
     return pages
@@ -60,7 +59,7 @@ async def on_ready():
 bot.run("token")
 ```
 
-### Customized paginator:
+### Custom paginator
 
 ```py
 import discord
@@ -77,7 +76,6 @@ def make_pages():
     pages = []
     for i in range(1, 6):
         embed = discord.Embed()
-        embed.color = discord.Color.blurple()
         embed.title = f"I'm the embed {i}!"
         pages.append(embed)
     return pages
@@ -85,15 +83,14 @@ def make_pages():
 
 @bot.command()
 async def test(ctx):
-    async with ctx.typing():
-        paginator = Paginator(
-            pages=make_pages(),
-            compact=True,
-            timeout=60,
-            load_message=LOADING_MESSAGE,
-            fail_message=FAILED_MESSAGE,
-        )
-        await paginator.paginate(ctx)
+    paginator = Paginator(
+        pages=make_pages(),
+        compact=True,
+        timeout=60,
+        load_message=LOADING_MESSAGE,
+        fail_message=FAILED_MESSAGE,
+    )
+    await paginator.paginate(ctx)
 
 
 @bot.event
@@ -115,7 +112,7 @@ bot.run("token")
 | fail_message | The message displayed when the bot can't add reactions in the channel.                                                                          | str                 | Custom  | Yes      |
 
 ## Custom attributes
-A list with all the default values of the attributes. These values can be overwritten.
+A list with all the default custom values of the attributes. These values can be overwritten.
 
 ### Loading message
 ```
