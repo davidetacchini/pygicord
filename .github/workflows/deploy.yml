@@ -2,8 +2,8 @@ name: Deploy
 
 on:
   release:
-    types: 
-      - created
+    types:
+      - published
 
 jobs:
   build:
