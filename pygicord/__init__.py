@@ -182,7 +182,7 @@ class Paginator:
 
     async def controller(self, ctx, react):
         if react == "close":
-            self.loop.create_task(self.close_paginator(self.embed))
+            await self.close_paginator(self.embed)
 
         elif react == "input":
             to_delete = []
@@ -254,14 +254,13 @@ class Paginator:
                 return False
             return True
 
-        while True:
+        while self.__is_running:
             try:
                 react, user = await ctx.bot.wait_for(
                     "reaction_add", check=check, timeout=self.timeout
                 )
             except asyncio.TimeoutError:
-                self.__timed_out = True
-                return self.loop.create_task(self.close_paginator(self.embed))
+                await self.close_paginator(self.embed, timed_out=True)
 
             reaction = self.__reactions.get(str(react))
 
@@ -314,4 +313,4 @@ class Paginator:
         self.end = float(len(self.embeds) - 1)
         if self.compact is False:
             self.__reactions["⏭"] = self.end
-        self.__pagination = self.loop.create_task(self.paginator(ctx))
+        self.__tasks.append(self.loop.create_task(self.paginator(ctx)))
