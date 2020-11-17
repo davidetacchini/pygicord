@@ -5,6 +5,7 @@ dist
 
 .DS_Store
 .vscode
-test.py
 
 env
+
+test.py
