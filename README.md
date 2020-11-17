@@ -12,7 +12,7 @@
     <img alt="PyPI - Version" src="https://img.shields.io/pypi/v/pygicord">
 </a>
 
-An easy-to-use pagination wrapper for discord.py library.
+An easy-to-use pagination wrapper for discord.py
 
 ## Installing
 
