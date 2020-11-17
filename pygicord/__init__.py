@@ -81,8 +81,8 @@ class Paginator:
         "current",
         "previous",
         "end",
-        "__pagination",
-        "__timed_out",
+        "__tasks",
+        "__is_running",
         "__reactions",
     )
 
@@ -120,8 +120,8 @@ class Paginator:
         self.current = 0
         self.previous = 0
         self.end = 0
-        self.__pagination = None
-        self.__timed_out = False
+        self.__tasks = []
+        self.__is_running = True
         self.__reactions = {
             "⏮": 0.0,
             "◀": -1,
@@ -276,15 +276,18 @@ class Paginator:
             with suppress(KeyError):
                 await self.embed.edit(embed=self.embeds[self.current])
 
-    async def close_paginator(self, message):
+    async def close_paginator(self, message, timed_out=False):
         with suppress(discord.HTTPException, discord.Forbidden):
-            if self.__timed_out:
+            if timed_out:
                 await message.clear_reactions()
             else:
                 await message.delete()
 
         with suppress(Exception):
-            self.__pagination.cancel()
+            self.__is_running = False
+            for task in self.__tasks:
+                task.cancel()
+            self.__tasks.clear()
 
     async def paginate(self, ctx):
         """Start paginator session.
