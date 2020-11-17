@@ -221,7 +221,8 @@ class Paginator:
             self.current = int(react)
 
     async def paginator(self, ctx):
-        self.embed = await ctx.send(embed=self.embeds[0])
+        with suppress(discord.HTTPException, discord.Forbidden, IndexError):
+            self.embed = await ctx.send(embed=self.embeds[0])
 
         if len(self.embeds) > 1:
             if self.indicator is True:
