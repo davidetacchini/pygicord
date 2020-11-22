@@ -260,7 +260,7 @@ class Paginator:
                     "reaction_add", check=check, timeout=self.timeout
                 )
             except asyncio.TimeoutError:
-                await self.close_paginator(self.embed, timed_out=True)
+                return await self.close_paginator(self.embed, timed_out=True)
 
             reaction = self.__reactions.get(str(react))
 
