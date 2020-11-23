@@ -224,63 +224,79 @@ class Paginator:
         else:
             self.current = int(react)
 
-    async def paginator(self, ctx):
+    # https://discordpy.readthedocs.io/en/latest/api.html#discord.RawReactionActionEvent
+    def check(self, payload):
+        if payload.message_id != self.embed.id:
+            return False
+        if payload.user_id != self.ctx.author.id:
+            return False
+
+        return str(payload.emoji) in self.__reactions
+
+    async def add_reactions(self):
+        if self.indicator is True:
+            # Add loading message indicator
+            await self.embed.edit(content=self.load_message)
+        for reaction in self.__reactions:
+            try:
+                await self.embed.add_reaction(reaction)
+            except discord.Forbidden:
+                # Can't add reactions
+                if self.indicator is True:
+                    await self.embed.edit(content=self.fail_message)
+                return
+            except discord.HTTPException:
+                # Failed to add reactions
+                return
+        if self.indicator is True:
+            # Remove indicator
+            await self.embed.edit(content=None)
+
+    async def paginator(self):
         with suppress(discord.HTTPException, discord.Forbidden, IndexError):
-            self.embed = await ctx.send(embed=self.embeds[0])
+            self.embed = await self.ctx.send(embed=self.embeds[0])
 
         if len(self.embeds) > 1:
-            if self.indicator is True:
-                # Adding loading message indicator
-                await self.embed.edit(content=self.load_message)
-            for reaction in self.__reactions:
-                try:
-                    await self.embed.add_reaction(reaction)
-                except discord.Forbidden:
-                    # Can't add reactions
-                    if self.indicator is True:
-                        await self.embed.edit(content=self.fail_message)
-                    return
-                except discord.HTTPException:
-                    # Failed to add reactions
-                    return
-            if self.indicator is True:
-                # Remove indicator
-                await self.embed.edit(content=None)
-
-        def check(r, u):
-            if u.id == ctx.bot.user.id:
-                return False
-            if r.message.id != self.embed.id:
-                return False
-            elif str(r) not in self.__reactions.keys():
-                return False
-            elif u.id != ctx.author.id:
-                return False
-            return True
+            await self.add_reactions()
 
         while self.__is_running:
             try:
-                react, user = await ctx.bot.wait_for(
-                    "reaction_add", check=check, timeout=self.timeout
+                tasks = [
+                    asyncio.ensure_future(
+                        self.bot.wait_for("raw_reaction_add", check=self.check)
+                    ),
+                    asyncio.ensure_future(
+                        self.bot.wait_for("raw_reaction_remove", check=self.check)
+                    ),
+                ]
+
+                done, pending = await asyncio.wait(
+                    tasks, timeout=self.timeout, return_when=asyncio.FIRST_COMPLETED
                 )
-            except asyncio.TimeoutError:
-                return await self.close_paginator(self.embed, timed_out=True)
 
-            reaction = self.__reactions.get(str(react))
+                for task in pending:
+                    task.cancel()
 
-            with suppress(discord.HTTPException):
-                await self.embed.remove_reaction(react, user)
+                if len(done) == 0:
+                    # Clear reactions once the timeout has elapsed
+                    return await self.close_paginator(self.embed, timed_out=True)
 
-            self.previous = self.current
-            await self.controller(ctx, reaction)
+                payload = done.pop().result()
+                reaction = self.__reactions.get(str(payload.emoji))
 
-            if self.previous == self.current:
-                continue
+                self.previous = self.current
+                await self.controller(reaction)
 
-            with suppress(KeyError):
-                await self.embed.edit(embed=self.embeds[self.current])
+                if self.previous == self.current:
+                    continue
 
-    async def close_paginator(self, message, timed_out=False):
+                with suppress(Exception):
+                    await self.embed.edit(embed=self.embeds[self.current])
+
+            except Exception as exc:
+                print(exc)
+
+    async def close_paginator(self, message, *, timed_out=False):
         with suppress(discord.HTTPException, discord.Forbidden):
             if timed_out:
                 await message.clear_reactions()
