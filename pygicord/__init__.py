@@ -260,7 +260,7 @@ class Paginator:
             await self.add_reactions()
 
         while self.__is_running:
-            try:
+            with suppress(Exception):
                 tasks = [
                     asyncio.ensure_future(
                         self.bot.wait_for("raw_reaction_add", check=self.check)
@@ -292,9 +292,6 @@ class Paginator:
 
                 with suppress(Exception):
                     await self.embed.edit(embed=self.embeds[self.current])
-
-            except Exception as exc:
-                print(exc)
 
     async def close_paginator(self, message, *, timed_out=False):
         with suppress(discord.HTTPException, discord.Forbidden):
