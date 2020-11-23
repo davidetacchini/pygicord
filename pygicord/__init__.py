@@ -309,9 +309,9 @@ class Paginator:
             return await ctx.send(embed=self.pages)
 
         if self.pages is not None:
-            for embed in self.pages:
-                if isinstance(embed, discord.Embed):
-                    self.embeds.append(embed)
+            for page in self.pages:
+                if isinstance(page, discord.Embed):
+                    self.embeds.append(page)
 
         if self.embeds is None:
             raise EmptyPages()
