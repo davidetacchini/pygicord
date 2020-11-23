@@ -127,12 +127,12 @@ class Paginator:
         self.__tasks = []
         self.__is_running = True
         self.__reactions = {
-            "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}": 0.0,
-            "\N{BLACK LEFT-POINTING TRIANGLE}": -1,
-            "\N{BLACK SQUARE FOR STOP}": "close",
-            "\N{BLACK RIGHT-POINTING TRIANGLE}": +1,
-            "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}": None,
-            "\N{INPUT SYMBOL FOR NUMBERS}": "input",
+            "⏮": 0.0,
+            "◀": -1,
+            "⏹️": "close",
+            "▶": +1,
+            "⏭": None,
+            "🔢": "input",
         }
 
         if self.pages is not None:
