@@ -136,13 +136,13 @@ class Paginator:
         }
 
         if self.pages is not None:
-            if len(self.pages) == 2:
+            if len(self.pages).__eq__(2):
                 self.compact = True
 
         if self.compact is True:
-            del self.__reactions["⏮"]
-            del self.__reactions["⏭"]
-            del self.__reactions["🔢"]
+            keys = ["⏮", "⏭", "🔢"]
+            for key in keys:
+                del self.__reactions[key]
 
     @property
     def load_message(self):
@@ -257,7 +257,7 @@ class Paginator:
             self.embed = await self.ctx.send(embed=self.embeds[0])
 
         if len(self.embeds) > 1:
-            await self.add_reactions()
+            self.__tasks.append(self.loop.create_task(self.add_reactions()))
 
         while self.__is_running:
             with suppress(Exception):
