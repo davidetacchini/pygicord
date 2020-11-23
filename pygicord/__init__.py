@@ -77,9 +77,9 @@ class Paginator:
         "_fail_message",
         "embeds",
         "embed",
-        "loop",
-        "bot",
         "ctx",
+        "bot",
+        "loop",
         "current",
         "previous",
         "end",
@@ -118,9 +118,9 @@ class Paginator:
 
         self.embeds = []
         self.embed = None
-        self.loop = None
-        self.bot = None
         self.ctx = None
+        self.bot = None
+        self.loop = None
         self.current = 0
         self.previous = 0
         self.end = 0
