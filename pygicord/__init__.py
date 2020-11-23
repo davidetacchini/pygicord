@@ -78,6 +78,8 @@ class Paginator:
         "embeds",
         "embed",
         "loop",
+        "bot",
+        "ctx",
         "current",
         "previous",
         "end",
@@ -117,6 +119,8 @@ class Paginator:
         self.embeds = []
         self.embed = None
         self.loop = None
+        self.bot = None
+        self.ctx = None
         self.current = 0
         self.previous = 0
         self.end = 0
@@ -297,6 +301,8 @@ class Paginator:
         ctx: :class:`Context`
             The invocation context to use.
         """
+        self.ctx = ctx
+        self.bot = ctx.bot
         self.loop = ctx.bot.loop
 
         if isinstance(self.pages, discord.Embed):
