@@ -184,30 +184,30 @@ class Paginator:
             page = number
         self.current = page - 1
 
-    async def controller(self, ctx, react):
+    async def controller(self, react):
         if react == "close":
             await self.close_paginator(self.embed)
 
         elif react == "input":
             to_delete = []
             to_delete.append(
-                await ctx.send(
+                await self.ctx.send(
                     f"What page do you want to go to? *Choose between 1 and {int(self.end) + 1}*"
                 )
             )
 
             def check(m):
                 return (
-                    m.author.id == ctx.author.id
-                    and ctx.channel.id == m.channel.id
+                    m.author.id == self.ctx.author.id
+                    and self.ctx.channel.id == m.channel.id
                     and m.content.isdigit()
                 )
 
             try:
-                message = await ctx.bot.wait_for("message", check=check, timeout=30.0)
+                message = await self.bot.wait_for("message", check=check, timeout=30.0)
             except asyncio.TimeoutError:
                 to_delete.append(
-                    await ctx.send("You took too long to choose a number.")
+                    await self.ctx.send("You took too long to choose a number.")
                 )
                 await asyncio.sleep(5)
             else:
@@ -215,7 +215,7 @@ class Paginator:
                 self.got_to_page(int(message.content))
 
             with suppress(Exception):
-                await ctx.channel.delete_messages(to_delete)
+                await self.ctx.channel.delete_messages(to_delete)
 
         elif isinstance(react, int):
             self.current += react
@@ -306,7 +306,7 @@ class Paginator:
         self.loop = ctx.bot.loop
 
         if isinstance(self.pages, discord.Embed):
-            return await ctx.send(embed=self.pages)
+            return await self.ctx.send(embed=self.pages)
 
         if self.pages is not None:
             for page in self.pages:
@@ -319,4 +319,4 @@ class Paginator:
         self.end = float(len(self.embeds) - 1)
         if self.compact is False:
             self.__reactions["⏭"] = self.end
-        self.__tasks.append(self.loop.create_task(self.paginator(ctx)))
+        self.__tasks.append(self.loop.create_task(self.paginator()))
