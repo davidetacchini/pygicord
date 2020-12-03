@@ -32,10 +32,11 @@ from discord.ext import commands
 
 from pygicord import Paginator
 
+
 bot = commands.Bot(command_prefix=".")
 
 
-def make_pages():
+def get_pages():
     pages = []
     # Generate a list of 5 embed instances
     for i in range(1, 6):
@@ -47,8 +48,8 @@ def make_pages():
 
 @bot.command()
 async def test(ctx):
-    paginator = Paginator(pages=make_pages())
-    await paginator.paginate(ctx)
+    paginator = Paginator(pages=get_pages())
+    await paginator.start(ctx)
 
 
 @bot.event
@@ -67,12 +68,14 @@ from discord.ext import commands
 
 from pygicord import Paginator
 
-bot = commands.Bot(command_prefix=".")
+
 LOADING_MESSAGE = "Loading reactions..."
 FAILED_MESSAGE = "Can't add reactions :("
 
+bot = commands.Bot(command_prefix=".")
 
-def make_pages():
+
+def get_pages():
     pages = []
     for i in range(1, 6):
         embed = discord.Embed()
@@ -84,13 +87,13 @@ def make_pages():
 @bot.command()
 async def test(ctx):
     paginator = Paginator(
-        pages=make_pages(),
+        pages=get_pages(),
         compact=True,
-        timeout=60,
+        timeout=60.0,
         load_message=LOADING_MESSAGE,
         fail_message=FAILED_MESSAGE,
     )
-    await paginator.paginate(ctx)
+    await paginator.start(ctx)
 
 
 @bot.event
