@@ -23,40 +23,27 @@ SOFTWARE.
 """
 
 import asyncio
-from typing import Union, Optional
+from typing import List, Union, Optional
 from contextlib import suppress
 
 import discord
 
 
-class PaginatorException(Exception):
-    """Base exception class for Pygicord."""
-
-    pass
-
-
-class EmptyPages(PaginatorException):
-    """Exception raised when trying to paginate an empty list."""
-
-    def __init__(self):
-        super().__init__("Can't paginate an empty list.")
-
-
 class Paginator:
-    """A pagination wrapper that allows to move between multiple embeds by using reactions.
+    """A pagination wrapper that allows to move between multiple pages by using reactions.
 
     Attributes
     ------------
-    pages: Optional[Union[:class:`list`, :class:`discord.Embed`]]
-        A list of embeds you want the paginator to paginate.
+    pages: Optional[Union[:class:`List[discord.Embed]`, :class:`discord.Embed`]]
+        A list of pages you want the paginator to paginate.
         Passing a discord.Embed instance will still work as if you are
         using: await ctx.send(embed=embed).
     timeout: :class:`float`.
-        The timeout before the paginator's reactions will be cleared.
+        The timeout to wait before stopping the paginator session.
         Defaults to ``90.0``.
     compact: :class:`bool`.
         Whether the paginator should use a compact version of itself
-        having only three reactions: previous, close and next.
+        having only three reactions: previous, stop and next.
         Defaults to ``False``.
     indicator: :class:`bool`
         Whether to display an indicator. It is used to display a message
@@ -65,7 +52,7 @@ class Paginator:
     load_message: :class:`str`
         The message displayed when reactions are loading.
     fail_message: :class:`str`
-        The message displayed when the bot can't add reactions in the channel.
+        The message displayed when the bot lacks `Add Reactions` permission in the channel.
     """
 
     __slots__ = (
@@ -75,23 +62,22 @@ class Paginator:
         "indicator",
         "_load_message",
         "_fail_message",
-        "embeds",
-        "embed",
+        "message",
         "ctx",
         "bot",
         "loop",
         "current",
         "previous",
         "end",
+        "reactions",
         "__tasks",
         "__is_running",
-        "__reactions",
     )
 
     def __init__(
         self,
         *,
-        pages: Optional[Union[list[discord.Embed], discord.Embed]] = None,
+        pages: Optional[Union[List[discord.Embed], discord.Embed]] = None,
         compact: bool = False,
         timeout: float = 90.0,
         indicator: bool = True,
@@ -116,24 +102,25 @@ class Paginator:
         else:
             self.fail_message = fail_message
 
-        self.embeds = []
-        self.embed = None
         self.ctx = None
         self.bot = None
         self.loop = None
+        self.message = None
+
         self.current = 0
         self.previous = 0
         self.end = 0
-        self.__tasks = []
-        self.__is_running = True
-        self.__reactions = {
+        self.reactions = {
             "⏮": 0.0,
             "◀": -1,
-            "⏹️": "close",
+            "⏹️": "stop",
             "▶": +1,
             "⏭": None,
             "🔢": "input",
         }
+
+        self.__tasks = []
+        self.__is_running = True
 
         if self.pages is not None:
             if len(self.pages).__eq__(2):
@@ -142,7 +129,7 @@ class Paginator:
         if self.compact is True:
             keys = ["⏮", "⏭", "🔢"]
             for key in keys:
-                del self.__reactions[key]
+                del self.reactions[key]
 
     @property
     def load_message(self):
@@ -177,31 +164,32 @@ class Paginator:
                 % value.__class__.__name__
             )
 
-    def got_to_page(self, number):
-        if number > int(self.end) + 1:
-            page = int(self.end) + 1
+    def go_to_page(self, number):
+        if number > int(self.end):
+            page = int(self.end)
         else:
-            page = number
-        self.current = page - 1
+            page = number - 1
+        self.current = page
 
     async def controller(self, react):
-        if react == "close":
-            await self.close_paginator(self.embed)
+        if react == "stop":
+            await self.stop()
 
         elif react == "input":
             to_delete = []
-            to_delete.append(
-                await self.ctx.send(
-                    f"What page do you want to go to? *Choose between 1 and {int(self.end) + 1}*"
-                )
+            message = await self.ctx.send(
+                f"What page do you want to go to? *Choose between 1 and {int(self.end) + 1}*"
             )
+            to_delete.append(message)
 
             def check(m):
-                return (
-                    m.author.id == self.ctx.author.id
-                    and self.ctx.channel.id == m.channel.id
-                    and m.content.isdigit()
-                )
+                if m.author.id != self.ctx.author.id:
+                    return False
+                if self.ctx.channel.id != m.channel.id:
+                    return False
+                if not m.content.isdigit():
+                    return False
+                return True
 
             try:
                 message = await self.bot.wait_for("message", check=check, timeout=30.0)
@@ -212,7 +200,7 @@ class Paginator:
                 await asyncio.sleep(5)
             else:
                 to_delete.append(message)
-                self.got_to_page(int(message.content))
+                self.go_to_page(int(message.content))
 
             with suppress(Exception):
                 await self.ctx.channel.delete_messages(to_delete)
@@ -226,37 +214,36 @@ class Paginator:
 
     # https://discordpy.readthedocs.io/en/latest/api.html#discord.RawReactionActionEvent
     def check(self, payload):
-        if payload.message_id != self.embed.id:
+        if payload.message_id != self.message.id:
             return False
         if payload.user_id != self.ctx.author.id:
             return False
 
-        return str(payload.emoji) in self.__reactions
+        return str(payload.emoji) in self.reactions
 
     async def add_reactions(self):
         if self.indicator is True:
             # Add loading message indicator
-            await self.embed.edit(content=self.load_message)
-        for reaction in self.__reactions:
+            await self.message.edit(content=self.load_message)
+        for reaction in self.reactions:
             try:
-                await self.embed.add_reaction(reaction)
+                await self.message.add_reaction(reaction)
             except discord.Forbidden:
                 # Can't add reactions
                 if self.indicator is True:
-                    await self.embed.edit(content=self.fail_message)
+                    await self.message.edit(content=self.fail_message)
                 return
             except discord.HTTPException:
                 # Failed to add reactions
                 return
         if self.indicator is True:
-            # Remove indicator
-            await self.embed.edit(content=None)
+            await self.message.edit(content=None)  # Remove indicator
 
     async def paginator(self):
         with suppress(discord.HTTPException, discord.Forbidden, IndexError):
-            self.embed = await self.ctx.send(embed=self.embeds[0])
+            self.message = await self.ctx.send(embed=self.pages[0])
 
-        if len(self.embeds) > 1:
+        if len(self.pages) > 1:
             self.__tasks.append(self.loop.create_task(self.add_reactions()))
 
         while self.__is_running:
@@ -279,10 +266,10 @@ class Paginator:
 
                 if len(done) == 0:
                     # Clear reactions once the timeout has elapsed
-                    return await self.close_paginator(self.embed, timed_out=True)
+                    return await self.stop(timed_out=True)
 
                 payload = done.pop().result()
-                reaction = self.__reactions.get(str(payload.emoji))
+                reaction = self.reactions.get(str(payload.emoji))
 
                 self.previous = self.current
                 await self.controller(reaction)
@@ -291,14 +278,14 @@ class Paginator:
                     continue
 
                 with suppress(Exception):
-                    await self.embed.edit(embed=self.embeds[self.current])
+                    await self.message.edit(embed=self.pages[self.current])
 
-    async def close_paginator(self, message, *, timed_out=False):
+    async def stop(self, *, timed_out=False):
         with suppress(discord.HTTPException, discord.Forbidden):
             if timed_out:
-                await message.clear_reactions()
+                await self.message.clear_reactions()
             else:
-                await message.delete()
+                await self.message.delete()
 
         with suppress(Exception):
             self.__is_running = False
@@ -306,7 +293,7 @@ class Paginator:
                 task.cancel()
             self.__tasks.clear()
 
-    async def paginate(self, ctx):
+    async def start(self, ctx):
         """Start paginator session.
 
         Parameters
@@ -321,15 +308,10 @@ class Paginator:
         if isinstance(self.pages, discord.Embed):
             return await self.ctx.send(embed=self.pages)
 
-        if self.pages is not None:
-            for page in self.pages:
-                if isinstance(page, discord.Embed):
-                    self.embeds.append(page)
+        if len(self.pages) == 0:
+            raise RuntimeError("Can't paginate an empty list.")
 
-        if self.embeds is None:
-            raise EmptyPages()
-
-        self.end = float(len(self.embeds) - 1)
+        self.end = float(len(self.pages) - 1)
         if self.compact is False:
-            self.__reactions["⏭"] = self.end
+            self.reactions["⏭"] = self.end
         self.__tasks.append(self.loop.create_task(self.paginator()))
