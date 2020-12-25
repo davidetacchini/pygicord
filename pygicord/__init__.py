@@ -247,9 +247,6 @@ class Paginator:
                 % self.pages.__class__.__name__
             )
 
-        if self.pages is None:
-            raise RuntimeError("Can't paginate a NoneType object.")
-
         if len(self.pages) == 0:
             raise RuntimeError("Can't paginate an empty list.")
 
