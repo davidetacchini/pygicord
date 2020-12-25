@@ -74,7 +74,6 @@ class Paginator:
         compact: bool = False,
         timeout: float = 90.0,
         has_input: bool = True,
-        **kwargs,
     ):
         self.pages = pages
         self.compact = compact
