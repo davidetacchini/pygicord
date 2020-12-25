@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 
 def read(fp):
@@ -19,6 +19,7 @@ setup(
     },
     version=__version__,
     packages=["pygicord"],
+    keywords=["discord.py", "paginator"],
     description="An easy-to-use pagination wrapper for discord.py",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
