@@ -36,32 +36,25 @@ class Paginator:
     ------------
     pages: Optional[Union[:class:`List[discord.Embed]`, :class:`discord.Embed`]]
         A list of pages you want the paginator to paginate.
-        Passing a discord.Embed instance will still work as if you are
+        Passing a discord.Embed instance will still work as if you were
         using: await ctx.send(embed=embed).
     timeout: :class:`float`.
         The timeout to wait before stopping the paginator session.
         Defaults to ``90.0``.
     compact: :class:`bool`.
-        Whether the paginator should use a compact version of itself
-        having only three reactions: previous, stop and next.
-        Defaults to ``False``.
-    indicator: :class:`bool`
-        Whether to display an indicator. It is used to display a message
-        when reactions are loading or when the bot lacks ``Add Reactions``
-        permission. Defaults to ``True``.
-    load_message: :class:`str`
-        The message displayed when reactions are loading.
-    fail_message: :class:`str`
-        The message displayed when the bot lacks `Add Reactions` permission in the channel.
+        Whether the paginator should only use three reactions:
+        previous, stop and next. Defaults to ``False``.
+    has_input: :class:`bool`.
+        Whether the paginator should add a reaction for taking input
+        numbers. Defaults to ``True``.
     """
 
     __slots__ = (
         "pages",
         "timeout",
         "compact",
+        "has_input",
         "indicator",
-        "_load_message",
-        "_fail_message",
         "message",
         "ctx",
         "bot",
@@ -80,27 +73,13 @@ class Paginator:
         pages: Optional[Union[List[discord.Embed], discord.Embed]] = None,
         compact: bool = False,
         timeout: float = 90.0,
-        indicator: bool = True,
+        has_input: bool = True,
         **kwargs,
     ):
         self.pages = pages
         self.compact = compact
         self.timeout = timeout
-        self.indicator = indicator
-
-        try:
-            load_message = kwargs["load_message"]
-        except KeyError:
-            pass
-        else:
-            self.load_message = load_message
-
-        try:
-            fail_message = kwargs["fail_message"]
-        except KeyError:
-            pass
-        else:
-            self.fail_message = fail_message
+        self.has_input = has_input
 
         self.ctx = None
         self.bot = None
@@ -116,53 +95,22 @@ class Paginator:
             "⏹️": "stop",
             "▶": +1,
             "⏭": None,
-            "🔢": "input",
         }
 
         self.__tasks = []
         self.__is_running = True
 
+        if self.has_input is True:
+            self.reactions["🔢"] = "input"
+
         if self.pages is not None:
-            if len(self.pages).__eq__(2):
+            if len(self.pages) == 2:
                 self.compact = True
 
         if self.compact is True:
-            keys = ["⏮", "⏭", "🔢"]
+            keys = ("⏮", "⏭", "🔢")
             for key in keys:
                 del self.reactions[key]
-
-    @property
-    def load_message(self):
-        default = "Adding reactions..."
-        return getattr(self, "_load_message", default)
-
-    @load_message.setter
-    def load_message(self, value):
-        if isinstance(value, str):
-            self._load_message = value
-        else:
-            raise ValueError(
-                "load_message must be an instance of <class 'str'> not %s"
-                % value.__class__.__name__
-            )
-
-    @property
-    def fail_message(self):
-        default = (
-            "I can't add reactions in this channel!\n"
-            "Please grant me `Add Reactions` permission."
-        )
-        return getattr(self, "_fail_message", default)
-
-    @fail_message.setter
-    def fail_message(self, value):
-        if isinstance(value, str):
-            self._fail_message = value
-        else:
-            raise ValueError(
-                "fail_message must be an instance of <class 'str'> not %s"
-                % value.__class__.__name__
-            )
 
     def go_to_page(self, number):
         if number > int(self.end):
@@ -177,9 +125,7 @@ class Paginator:
 
         elif react == "input":
             to_delete = []
-            message = await self.ctx.send(
-                f"What page do you want to go to? *Choose between 1 and {int(self.end) + 1}*"
-            )
+            message = await self.ctx.send("What page do you want to go to?")
             to_delete.append(message)
 
             def check(m):
@@ -195,7 +141,7 @@ class Paginator:
                 message = await self.bot.wait_for("message", check=check, timeout=30.0)
             except asyncio.TimeoutError:
                 to_delete.append(
-                    await self.ctx.send("You took too long to choose a number.")
+                    await self.ctx.send("You took too long to enter a number.")
                 )
                 await asyncio.sleep(5)
             else:
@@ -222,22 +168,9 @@ class Paginator:
         return str(payload.emoji) in self.reactions
 
     async def add_reactions(self):
-        if self.indicator is True:
-            # Add loading message indicator
-            await self.message.edit(content=self.load_message)
         for reaction in self.reactions:
-            try:
+            with suppress(discord.Forbidden, discord.HTTPException):
                 await self.message.add_reaction(reaction)
-            except discord.Forbidden:
-                # Can't add reactions
-                if self.indicator is True:
-                    await self.message.edit(content=self.fail_message)
-                return
-            except discord.HTTPException:
-                # Failed to add reactions
-                return
-        if self.indicator is True:
-            await self.message.edit(content=None)  # Remove indicator
 
     async def paginator(self):
         with suppress(discord.HTTPException, discord.Forbidden, IndexError):
@@ -307,6 +240,15 @@ class Paginator:
 
         if isinstance(self.pages, discord.Embed):
             return await self.ctx.send(embed=self.pages)
+
+        if not isinstance(self.pages, (list, discord.Embed)):
+            raise TypeError(
+                "Can't paginate an instance of <class '%s'>."
+                % self.pages.__class__.__name__
+            )
+
+        if self.pages is None:
+            raise RuntimeError("Can't paginate a NoneType object.")
 
         if len(self.pages) == 0:
             raise RuntimeError("Can't paginate an empty list.")
