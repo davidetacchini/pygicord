@@ -54,7 +54,6 @@ class Paginator:
         "timeout",
         "compact",
         "has_input",
-        "indicator",
         "message",
         "ctx",
         "bot",
