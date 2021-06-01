@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 
 
 def read(fp):
@@ -13,11 +13,8 @@ setup(
     name="pygicord",
     author="Davide Tacchini",
     url="https://github.com/davidetacchini/pygicord",
-    project_urls={
-        "GitHub repo": "https://github.com/davidetacchini/pygicord",
-        "GitHub issues": "https://github.com/davidetacchini/pygicord/issues",
-    },
     version=__version__,
+    license="MIT",
     packages=["pygicord"],
     keywords=["discord.py", "paginator"],
     description="An easy-to-use pagination wrapper for discord.py",
@@ -27,10 +24,12 @@ setup(
     install_requires=read("requirements.txt"),
     extras_require={"dev": ["black", "isort", "flake8"]},
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Natural Language :: English",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Internet",
