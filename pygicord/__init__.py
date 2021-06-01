@@ -72,7 +72,7 @@ class Paginator:
         pages: Optional[Union[List[discord.Embed], discord.Embed]] = None,
         compact: bool = False,
         timeout: float = 90.0,
-        has_input: bool = True,
+        has_input: bool = True
     ):
         self.pages = pages
         self.compact = compact
