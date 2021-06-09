@@ -13,16 +13,25 @@ An easy-to-use pagination wrapper for discord.py
 <a href="https://pypi.org/project/pygicord" traget="_blank">
     <img alt="PyPI - Version" src="https://img.shields.io/pypi/v/pygicord">
 </a>
-<a href="https://pypi.org/project/pygicord" traget="_blank">
-	<img alt="PyPI - Downloads" src="https://pepy.tech/badge/pygicord">
+<a href="https://pepy.tech/project/pygicord" traget="_blank">
+	<img alt="PePy - Downloads" src="https://pepy.tech/badge/pygicord">
 </a>
+
+## Notes
+
+* Make sure your bot has `Manage Messages` permission to take full advantage from the paginator.
+* It is recommended using the latest stable version of <a href="https://discordpy.readthedocs.io/en/stable/">discord.py</a>.
 
 ## Installing
 
-It is recommended using the latest stable version of <a href="https://discordpy.readthedocs.io/en/stable/">discord.py</a>.
-
 ```shell
 pip install pygicord
+```
+
+or via git: to download the latest version available (if not deployed already).
+
+```shell
+pip install git+https://github.com/davidetacchini/pygicord
 ```
 
 ## Basic example
@@ -64,7 +73,8 @@ bot.run("token")
 ## Attributes
 | Name      | Description                                                                      | Type                               | Default |
 | --------- | -------------------------------------------------------------------------------- | ---------------------------------- | ------- |
-| pages     | A list of embeds you want the paginator to paginate or a discord.Embed instance. | List[discord.Embed], discord.Embed | None    |
+| pages     | A list of embeds to paginate or an embed instance. 					           | List[discord.Embed], discord.Embed | None    |
 | timeout   | The timeout to wait before stopping the paginator session.                       | float                              | 90.0    |
-| compact   | Whether the paginator should only use three reactions: previous, stop and next.  | bool                               | False   |
-| has_input | Whether the paginator should add a reaction for taking input numbers.            | bool                               | True    |
+| compact   | Whether to use three reactions: previous, stop and next.  					   | bool                               | False   |
+| has_input | Whether to add a reaction to enter a page number to go to.            	       | bool                               | True    |
+| has_lock  | Whether to add a reaction to lock/unlock the session to other members.       	   | bool                               | False   |
