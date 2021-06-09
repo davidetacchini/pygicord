@@ -152,7 +152,7 @@ class Paginator:
                 await self.stop()
             elif reaction == "input":
                 await self.get_input()
-            elif reaction in ("lock", "unlock"):
+            elif reaction == "lock":
                 await self.lock_or_unlock(user_id)
             elif isinstance(reaction, int):
                 self._current += reaction
