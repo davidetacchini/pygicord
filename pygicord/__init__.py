@@ -1,27 +1,3 @@
-"""
-MIT License
-
-Copyright (c) 2020 Smyile
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-"""
-
 import asyncio
 from typing import List, Union, Optional
 from contextlib import suppress
@@ -35,18 +11,19 @@ class Paginator:
     Attributes
     ------------
     pages: Optional[Union[:class:`List[discord.Embed]`, :class:`discord.Embed`]]
-        A list of pages you want the paginator to paginate.
-        Passing a discord.Embed instance will still work as if you were
-        using: await ctx.send(embed=embed).
+        A list of embeds to paginate or an instance.
     timeout: :class:`float`.
         The timeout to wait before stopping the paginator session.
         Defaults to ``90.0``.
     compact: :class:`bool`.
-        Whether the paginator should only use three reactions:
-        previous, stop and next. Defaults to ``False``.
+        Whether to use three reactions: previous, stop and next.
+        Defaults to ``False``.
     has_input: :class:`bool`.
-        Whether the paginator should add a reaction for taking input
-        numbers. Defaults to ``True``.
+        Whether to add a reaction to enter a page number to go to.
+        Defaults to ``True``.
+    has_lock: :class:`bool`.
+        Whether to add a reaction to lock/unlock the session to
+        other members. Defaults to ``False``.
     """
 
     __slots__ = (
@@ -54,16 +31,19 @@ class Paginator:
         "timeout",
         "compact",
         "has_input",
-        "message",
-        "ctx",
-        "bot",
-        "loop",
-        "current",
-        "previous",
-        "end",
-        "reactions",
+        "has_lock",
+        "_ctx",
+        "_bot",
+        "_loop",
+        "_message",
+        "_current",
+        "_previous",
+        "_end",
+        "_reactions",
         "__tasks",
         "__is_running",
+        "__is_locked",
+        "__mutex",
     )
 
     def __init__(
@@ -72,22 +52,24 @@ class Paginator:
         pages: Optional[Union[List[discord.Embed], discord.Embed]] = None,
         compact: bool = False,
         timeout: float = 90.0,
-        has_input: bool = True
+        has_input: bool = True,
+        has_lock: bool = False
     ):
         self.pages = pages
         self.compact = compact
         self.timeout = timeout
         self.has_input = has_input
+        self.has_lock = has_lock
 
-        self.ctx = None
-        self.bot = None
-        self.loop = None
-        self.message = None
+        self._ctx = None
+        self._bot = None
+        self._loop = None
+        self._message = None
 
-        self.current = 0
-        self.previous = 0
-        self.end = 0
-        self.reactions = {
+        self._current = 0
+        self._previous = 0
+        self._end = 0
+        self._reactions = {
             "⏮": 0.0,
             "◀": -1,
             "⏹️": "stop",
@@ -97,94 +79,116 @@ class Paginator:
 
         self.__tasks = []
         self.__is_running = True
+        self.__is_locked = True
+        self.__mutex = asyncio.Lock()
 
         if self.has_input is True:
-            self.reactions["🔢"] = "input"
+            self._reactions["🔢"] = "input"
+
+        if self.has_lock is True:
+            self._reactions["🔒"] = "lock"
 
         if self.pages is not None:
             if len(self.pages) == 2:
                 self.compact = True
+                self.has_input = False
 
         if self.compact is True:
-            keys = ("⏮", "⏭", "🔢")
+            keys = ("⏮", "⏭")
             for key in keys:
-                del self.reactions[key]
+                del self._reactions[key]
 
     def go_to_page(self, number):
-        if number > int(self.end):
-            page = int(self.end)
+        if number > int(self._end):
+            page = int(self._end)
         else:
             page = number - 1
-        self.current = page
+        self._current = page
 
-    async def controller(self, react):
-        if react == "stop":
-            await self.stop()
+    async def get_input(self):
+        to_delete = []
+        message = await self._ctx.send("What page do you want to go to?")
+        to_delete.append(message)
 
-        elif react == "input":
-            to_delete = []
-            message = await self.ctx.send("What page do you want to go to?")
-            to_delete.append(message)
-
-            def check(m):
-                if m.author.id != self.ctx.author.id:
+        def check(m):
+            if self.__is_locked:
+                if m.author.id != self._ctx.author.id:
                     return False
-                if self.ctx.channel.id != m.channel.id:
-                    return False
-                if not m.content.isdigit():
-                    return False
-                return True
+            if m.channel.id != self._ctx.channel.id:
+                return False
+            if not m.content.isdigit():
+                return False
+            return True
 
-            try:
-                message = await self.bot.wait_for("message", check=check, timeout=30.0)
-            except asyncio.TimeoutError:
-                to_delete.append(
-                    await self.ctx.send("You took too long to enter a number.")
-                )
-                await asyncio.sleep(5)
-            else:
-                to_delete.append(message)
-                self.go_to_page(int(message.content))
-
-            with suppress(Exception):
-                await self.ctx.channel.delete_messages(to_delete)
-
-        elif isinstance(react, int):
-            self.current += react
-            if self.current < 0 or self.current > self.end:
-                self.current -= react
+        try:
+            message = await self._bot.wait_for("message", check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            to_delete.append(
+                await self._ctx.send("You took too long to enter a number.")
+            )
+            await asyncio.sleep(5)
         else:
-            self.current = int(react)
+            to_delete.append(message)
+            self.go_to_page(int(message.content))
 
-    # https://discordpy.readthedocs.io/en/latest/api.html#discord.RawReactionActionEvent
+        with suppress(Exception):
+            await self._ctx.channel.delete_messages(to_delete)
+
+    async def lock_or_unlock(self, user_id):
+        # only the author can (un)lock the session
+        if self._ctx.author.id != user_id:
+            return
+        self.__is_locked = not self.__is_locked
+        if self.__is_locked:
+            await self._ctx.send("Session locked. Only you can interact with it.")
+        else:
+            await self._ctx.send("Session unlocked. Everyone can interact with it.")
+
+    async def controller(self, reaction, user_id):
+        if self.__mutex.locked():
+            return
+        async with self.__mutex:
+            if reaction == "stop":
+                await self.stop()
+            elif reaction == "input":
+                await self.get_input()
+            elif reaction in ("lock", "unlock"):
+                await self.lock_or_unlock(user_id)
+            elif isinstance(reaction, int):
+                self._current += reaction
+                if self._current < 0 or self._current > self._end:
+                    self._current -= reaction
+            else:
+                self._current = int(reaction)
+
     def check(self, payload):
-        if payload.message_id != self.message.id:
+        if self.__is_locked:
+            if payload.user_id != self._ctx.author.id:
+                return False
+        if payload.message_id != self._message.id:
             return False
-        if payload.user_id != self.ctx.author.id:
-            return False
-
-        return str(payload.emoji) in self.reactions
+        return str(payload.emoji) in self._reactions
 
     async def add_reactions(self):
-        for reaction in self.reactions:
+        for reaction in self._reactions:
             with suppress(discord.Forbidden, discord.HTTPException):
-                await self.message.add_reaction(reaction)
+                await self._message.add_reaction(reaction)
 
     async def paginator(self):
         with suppress(discord.HTTPException, discord.Forbidden, IndexError):
-            self.message = await self.ctx.send(embed=self.pages[0])
+            self._message = await self._ctx.send(embed=self.pages[0])
 
         if len(self.pages) > 1:
-            self.__tasks.append(self.loop.create_task(self.add_reactions()))
+            self.__tasks.append(self._loop.create_task(self.add_reactions()))
 
         while self.__is_running:
             with suppress(Exception):
                 tasks = [
                     asyncio.ensure_future(
-                        self.bot.wait_for("raw_reaction_add", check=self.check)
+                        self._bot.wait_for("raw_reaction_add", check=self.check)
                     ),
                     asyncio.ensure_future(
-                        self.bot.wait_for("raw_reaction_remove", check=self.check)
+                        self._bot.wait_for("raw_reaction_remove", check=self.check)
                     ),
                 ]
 
@@ -196,27 +200,27 @@ class Paginator:
                     task.cancel()
 
                 if len(done) == 0:
-                    # Clear reactions once the timeout has elapsed
+                    # clear the reactions once the timeout has elapsed
                     return await self.stop(timed_out=True)
 
                 payload = done.pop().result()
-                reaction = self.reactions.get(str(payload.emoji))
+                reaction = self._reactions.get(str(payload.emoji))
 
-                self.previous = self.current
-                await self.controller(reaction)
+                self._previous = self._current
+                await self.controller(reaction, payload.user_id)
 
-                if self.previous == self.current:
+                if self._previous == self._current:
                     continue
 
                 with suppress(Exception):
-                    await self.message.edit(embed=self.pages[self.current])
+                    await self._message.edit(embed=self.pages[self._current])
 
     async def stop(self, *, timed_out=False):
-        with suppress(discord.HTTPException, discord.Forbidden):
+        with suppress(discord.Forbidden, discord.HTTPException):
             if timed_out:
-                await self.message.clear_reactions()
+                await self._message.clear_reactions()
             else:
-                await self.message.delete()
+                await self._message.delete()
 
         with suppress(Exception):
             self.__is_running = False
@@ -232,12 +236,12 @@ class Paginator:
         ctx: :class:`Context`
             The invocation context to use.
         """
-        self.ctx = ctx
-        self.bot = ctx.bot
-        self.loop = ctx.bot.loop
+        self._ctx = ctx
+        self._bot = ctx.bot
+        self._loop = ctx.bot.loop
 
         if isinstance(self.pages, discord.Embed):
-            return await self.ctx.send(embed=self.pages)
+            return await self._ctx.send(embed=self.pages)
 
         if not isinstance(self.pages, (list, discord.Embed)):
             raise TypeError(
@@ -248,7 +252,7 @@ class Paginator:
         if len(self.pages) == 0:
             raise RuntimeError("Can't paginate an empty list.")
 
-        self.end = float(len(self.pages) - 1)
+        self._end = float(len(self.pages) - 1)
         if self.compact is False:
-            self.reactions["⏭"] = self.end
-        self.__tasks.append(self.loop.create_task(self.paginator()))
+            self._reactions["⏭"] = self._end
+        self.__tasks.append(self._loop.create_task(self.paginator()))
