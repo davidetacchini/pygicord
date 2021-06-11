@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup
 
-__version__ = "0.5.0a"
+__version__ = "0.5.0"
 
 
 def read(fp):
