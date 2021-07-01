@@ -1,8 +1,17 @@
 import os
+import re
 
 from setuptools import setup
 
-__version__ = "0.5.0"
+version = ""
+with open("pygicord/__init__.py") as fp:
+    version = re.search(
+        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fp.read(), re.MULTILINE
+    ).group(1)
+
+
+if not version:
+    raise RuntimeError("Cannot set the version.")
 
 
 def read(fp):
@@ -13,7 +22,7 @@ setup(
     name="pygicord",
     author="Davide Tacchini",
     url="https://github.com/davidetacchini/pygicord",
-    version=__version__,
+    version=version,
     license="MIT",
     packages=["pygicord"],
     keywords=["discord.py", "paginator"],
