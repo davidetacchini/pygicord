@@ -71,8 +71,9 @@ bot.run("token")
 
 ## Attributes
 
-| Name       | Description                                                       | Type                               | Default |
-|------------|-------------------------------------------------------------------|------------------------------------|---------|
-| pages      | A list of items, a string or an embed instance.                   | List[discord.Embed], discord.Embed | None    |
-| timeout    | The timeout to wait before stopping the paginator session.        | float                              | 90.0    |
-| is_compact | Whether to remove first page, last page and input numbers emojis. | bool                               | False   |
+| Name       | Description                                                       | Type  | Default |
+|------------|-------------------------------------------------------------------|-------|---------|
+| pages      | A list of items, a string or an embed instance.                   | TODO  | None    |
+| timeout    | The timeout to wait before stopping the paginator session.        | float | 90.0    |
+| is_compact | Whether to remove first page, last page and input numbers emojis. | bool  | False   |
+
