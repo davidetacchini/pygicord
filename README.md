@@ -19,7 +19,6 @@ An easy-to-use pagination wrapper for discord.py
 
 ## Notes
 
-* Make sure your bot has `Manage Messages` permission to take full advantage from the paginator.
 * It is recommended using the latest stable version of <a href="https://discordpy.readthedocs.io/en/stable/">discord.py</a>.
 
 ## Installing
@@ -28,7 +27,7 @@ An easy-to-use pagination wrapper for discord.py
 pip install pygicord
 ```
 
-or via git: to download the latest version available (if not deployed already).
+or via git:
 
 ```shell
 pip install git+https://github.com/davidetacchini/pygicord
@@ -48,33 +47,32 @@ bot = commands.Bot(command_prefix=".")
 
 def get_pages():
     pages = []
-    # Generate a list of 5 embeds
     for i in range(1, 6):
         embed = discord.Embed()
-        embed.title = f"I'm the embed {i}!"
+        embed.title = f"Embed no. {i}"
         pages.append(embed)
     return pages
 
 
 @bot.command()
 async def test(ctx):
-    paginator = Paginator(pages=get_pages())
+    pages = get_pages()
+    paginator = Paginator(pages=pages)
     await paginator.start(ctx)
 
 
 @bot.event
 async def on_ready():
-    print("I'm ready!")
+    print("Ready!")
 
 
 bot.run("token")
 ```
 
 ## Attributes
-| Name      | Description                                                                      | Type                               | Default |
-| --------- | -------------------------------------------------------------------------------- | ---------------------------------- | ------- |
-| pages     | A list of embeds to paginate or an embed instance. 					           | List[discord.Embed], discord.Embed | None    |
-| timeout   | The timeout to wait before stopping the paginator session.                       | float                              | 90.0    |
-| compact   | Whether to use three reactions: previous, stop and next.  					   | bool                               | False   |
-| has_input | Whether to add a reaction to enter a page number to go to.            	       | bool                               | True    |
-| has_lock  | Whether to add a reaction to lock/unlock the session to other members.       	   | bool                               | False   |
+
+| Name       | Description                                                       | Type                               | Default |
+|------------|-------------------------------------------------------------------|------------------------------------|---------|
+| pages      | A list of items, a string or an embed instance.                   | List[discord.Embed], discord.Embed | None    |
+| timeout    | The timeout to wait before stopping the paginator session.        | float                              | 90.0    |
+| is_compact | Whether to remove first page, last page and input numbers emojis. | bool                               | False   |
