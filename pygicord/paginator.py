@@ -238,7 +238,7 @@ class Paginator:
         if not permissions.send_messages:
             raise CannotSendMessages()
 
-        # TODO: this checks doen not cover all the pages
+        # TODO: this checks does not cover all the pages
         try:
             page = self.pages[0]
         except IndexError:
