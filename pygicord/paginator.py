@@ -23,7 +23,7 @@ class Paginator:
     Attributes
     ----------
     pages: Union[Any, List[Any]]
-        A list of elements or a single one.
+        A list of elements or just one.
     timeout: float
         The timeout to wait before stopping the paginator session.
         Defaults to ``90.0``.
