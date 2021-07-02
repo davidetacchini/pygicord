@@ -1,6 +1,6 @@
 import asyncio
 
-from typing import List, Union, Optional
+from typing import Any, List, Union
 
 import discord
 
@@ -16,17 +16,14 @@ from .exceptions import (
 
 __all__ = ("Paginator",)
 
-# TODO: fix this
-Pages = Optional[Union[List[Union[str, discord.Embed]], str, discord.Embed]]
-
 
 class Paginator:
     """An interactive pagination session.
 
     Attributes
     ----------
-    pages: Pages
-        A list of items, a string or a discord.Embed instance.
+    pages: Union[Any, List[Any]]
+        A list of elements or a single one.
     timeout: float
         The timeout to wait before stopping the paginator session.
         Defaults to ``90.0``.
@@ -51,7 +48,11 @@ class Paginator:
     )
 
     def __init__(
-        self, *, pages: Pages = None, is_compact: bool = False, timeout: float = 90.0
+        self,
+        *,
+        pages: Union[Any, List[Any]],
+        is_compact: bool = False,
+        timeout: float = 90.0
     ):
         self.pages = pages
         self._is_compact = is_compact
@@ -77,6 +78,9 @@ class Paginator:
         self._is_running = False
         self.__tasks = []
         self.__lock = asyncio.Lock()
+
+        if not isinstance(self.pages, list):
+            self.pages = [self.pages]
 
     def __len__(self):
         return len(self.pages)
@@ -138,8 +142,10 @@ class Paginator:
             return {"content": value, "embed": None}
         elif isinstance(value, discord.Embed):
             return {"content": None, "embed": value}
+        else:
+            raise TypeError("Invalid type for pages.")
 
-    async def stop(self, *, timed_out=False):
+    async def stop(self):
         self._is_running = False
         for task in self.__tasks:
             task.cancel()
@@ -238,17 +244,9 @@ class Paginator:
         if not permissions.send_messages:
             raise CannotSendMessages()
 
-        # TODO: this checks does not cover all the pages
-        try:
-            page = self.pages[0]
-        except IndexError:
-            page = None
+        embed_links = any(isinstance(p, discord.Embed) for p in self.pages)
 
-        if (
-            isinstance(self.pages, discord.Embed)
-            or isinstance(page, discord.Embed)
-            and not permissions.embed_links
-        ):
+        if embed_links and not permissions.embed_links:
             raise CannotEmbedLinks()
 
         if self.should_add_reactions():
@@ -273,6 +271,8 @@ class Paginator:
         ------
         PaginationError
             Bot does not have proper permissions.
+        TypeError
+            Invalid type for pages.
         """
         self.ctx = ctx
         self.bot = ctx.bot
