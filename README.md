@@ -1,5 +1,5 @@
 # Pygicord
-An easy-to-use pagination wrapper for discord.py
+An easy-to-use feature-rich pagination wrapper for discord.py
 
 <a href="https://github.com/davidetacchini/pygicord/actions" traget="_blank">
 	<img src="https://github.com/davidetacchini/pygicord/workflows/Lint/badge.svg" alt="Lint">
@@ -71,8 +71,7 @@ bot.run("token")
 
 ## Attributes
 
-| Name       | Description                                                       | Type                  | Default |
-|------------|-------------------------------------------------------------------|-----------------------|---------|
-| pages      | A list of elements or just one.                                   | Union[Any, List[Any]] | None    |
-| timeout    | The timeout to wait before stopping the paginator session.        | float                 | 90.0    |
-| is_compact | Whether to remove first page, last page and input numbers emojis. | bool                  | False   |
+| Name    | Description                                                | Type                  | Default |
+|---------|------------------------------------------------------------|-----------------------|---------|
+| pages   | A list of objects to paginate or just one.                 | Union[Any, List[Any]] | /       |
+| timeout | The timeout to wait before stopping the paginator session. | float                 | 90.0    |
