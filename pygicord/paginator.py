@@ -97,7 +97,6 @@ class Paginator(Base):
             return
 
         async with lock:
-            # guarded from the check before, don't need to check again
             if self.author is None:
                 self.author = self.ctx.author
                 await self.ctx.send(
