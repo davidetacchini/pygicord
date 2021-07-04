@@ -9,8 +9,6 @@ if TYPE_CHECKING:
 
 __all__ = ("Button", "button")
 
-DisplayPredicateT = Callable[["Base"], bool]
-InvokePredicateT = Callable[["Base", RawReactionActionEvent], bool]
 CallbackT = Callable[["Base", RawReactionActionEvent], None]
 
 
