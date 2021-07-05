@@ -81,16 +81,16 @@ class Base(metaclass=_BaseMeta):
         self.pages = pages
         self.timeout = timeout
 
-        self.ctx: commands.Context = None
+        self.ctx: Optional[commands.Context] = None
         self.bot: Optional[discord.Client] = None
-        self.message: discord.Message = None
+        self.message: Optional[discord.Message] = None
 
         self._index: int = 0
 
         # override on startup if should_add_reactions
         self._buttons: Dict[str, "Button"] = {}
 
-        self.author: discord.Member = None
+        self.author: Optional[discord.Member] = None
 
         self._is_running: bool = False
         self.__tasks: List[asyncio.Task] = []
@@ -104,7 +104,7 @@ class Base(metaclass=_BaseMeta):
 
     @property
     def loop(self):
-        """Bot event loop."""
+        """Returns the bot event loop."""
         return self.bot.loop
 
     @property
