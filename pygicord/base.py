@@ -187,15 +187,14 @@ class Base(metaclass=_BaseMeta):
                 payload = done.pop().result()
                 await self.dispatch(payload)
         except StopPagination as e:
-            action = e.action
-            if action & StopAction.DO_NOTHING:
+            if e.action & StopAction.DO_NOTHING:
                 return
-            elif action & StopAction.DELETE_MESSAGE:
+            elif e.action & StopAction.DELETE_MESSAGE:
                 try:
                     await self.message.delete()
                 except discord.HTTPException:
                     return
-            elif action & StopAction.CLEAR_REACTIONS:
+            elif e.action & StopAction.CLEAR_REACTIONS:
                 try:
                     await self.message.clear_reactions()
                 except discord.HTTPException:
