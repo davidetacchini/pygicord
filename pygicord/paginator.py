@@ -2,7 +2,7 @@ import asyncio
 
 from discord import HTTPException
 
-from .base import Base
+from .base import Base, StopAction, StopPagination
 from .button import button
 
 __all__ = ("Paginator",)
@@ -27,11 +27,7 @@ class Paginator(Base):
     @button(emoji="\N{BLACK SQUARE FOR STOP}", position=2)
     async def close(self, payload):
         """Stop pagination session."""
-        self.stop()
-        try:
-            await self.message.delete()
-        except HTTPException:
-            pass
+        raise StopPagination(StopAction.DELETE_MESSAGE)
 
     @button(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}", position=3)
     async def next(self, payload):
@@ -74,6 +70,8 @@ class Paginator(Base):
                 await self.ctx.send("Took too long.", delete_after=5.0)
             else:
                 index = int(message.content) - 1
+                # jump to the last page if the index is
+                # greater than the maximum pages. UX purpose
                 index = index if index < len(self) else len(self) - 1
                 await self.show_page(index)
             try:
