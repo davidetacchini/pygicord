@@ -48,23 +48,35 @@ class Button:
         self._invoke_preds = []
 
     def __str__(self):
+        """Returns the button emoji."""
         return self.emoji
 
     async def __call__(self, base: "Base", payload: RawReactionActionEvent):
+        """|coro|
+
+        Calls the internal button callback.
+        """
         for pred in self._invoke_preds:
             if not pred(base, payload):
                 return
         await self.callback(base, payload)
 
     def display_if(self, predicate):
+        """A decorator that registers a predicate which
+        determine whether the button should be displayed.
+        """
         self._display_preds.append(predicate)
         return predicate
 
     def invoke_if(self, predicate):
+        """A decorator that registers a predicate which
+        determine whether the button should be invoked.
+        """
         self._invoke_preds.append(predicate)
         return predicate
 
     def should_display(self, base):
+        """Returns whether a button should be displayed."""
         for pred in self._display_preds:
             if not pred(base):
                 return False
