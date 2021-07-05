@@ -74,25 +74,25 @@ class Button:
 def button(*, emoji: str, position: int):
     """Shorthand decorator for button creation.
 
-    Example
-    -------
-    class Paginator(Base):
-        @button(emoji="\N{BLACK SQUARE FOR STOP}", position=0)
-        async def close(self, payload):
-            '''stop pagination session.'''
-            self.stop()
-
-        @close.invoke_if
-        async def close_invoke_if(self, payload):
-            '''only the author can invoke it.'''
-            return self.ctx.author.id == payload.user_id
-
     Parameters
     ----------
     emoji : str
         The emoji to use as the button.
     position : int
         The positon of the button. 0-based.
+
+    Example
+    -------
+    class Paginator(Base):
+        @button(emoji="\N{BLACK SQUARE FOR STOP}", position=0)
+        async def close(self, payload):
+            '''Stop the pagination session.'''
+            self.stop()
+
+        @close.invoke_if
+        async def close_invoke_if(self, payload):
+            '''Only the author can invoke it.'''
+            return self.ctx.author.id == payload.user_id
     """
 
     def decorator(coro):
