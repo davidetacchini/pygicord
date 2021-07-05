@@ -62,14 +62,14 @@ class Button:
         await self.callback(base, payload)
 
     def display_if(self, predicate):
-        """A decorator that registers a predicate which
+        """A decorator that registers a predicate that
         determine whether the button should be displayed.
         """
         self._display_preds.append(predicate)
         return predicate
 
     def invoke_if(self, predicate):
-        """A decorator that registers a predicate which
+        """A decorator that registers a predicate that
         determine whether the button should be invoked.
         """
         self._invoke_preds.append(predicate)
