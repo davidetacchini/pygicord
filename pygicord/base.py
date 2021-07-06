@@ -1,7 +1,7 @@
 import asyncio
 
 from enum import IntFlag
-from typing import TYPE_CHECKING, Any, Dict, List, Union, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 import discord
 
@@ -93,25 +93,20 @@ class Base(metaclass=_BaseMeta):
         "__lock",
     )
 
-    def __init__(
-        self,
-        *,
-        pages: Union[Any, List[Any]],
-        timeout: float = 90.0,
-    ):
+    def __init__(self, *, pages: Union[Any, List[Any]], timeout: float = 90.0) -> None:
         self.pages = pages
         self.timeout = timeout
 
-        self.ctx: Optional[commands.Context] = None
-        self.bot: Optional[discord.Client] = None
-        self.message: Optional[discord.Message] = None
+        self.ctx: commands.Context = None
+        self.bot: discord.Client = None
+        self.message: discord.Message = None
 
         self._index: int = 0
 
         # override on startup if should_add_reactions
         self._buttons: Dict[str, "Button"] = {}
 
-        self.author: Optional[discord.Member] = None
+        self.author: discord.Member = None
 
         self._is_running: bool = False
         self.__tasks: List[asyncio.Task] = []
@@ -119,28 +114,28 @@ class Base(metaclass=_BaseMeta):
         if not isinstance(self.pages, list):
             self.pages = [self.pages]
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Returns the max number of pages."""
         return len(self.pages)
 
     @property
-    def loop(self):
+    def loop(self) -> asyncio.AbstractEventLoop:
         """Returns the bot event loop."""
         return self.bot.loop
 
     @property
-    def index(self):
+    def index(self) -> int:
         """Get current page index."""
         return self._index
 
     @index.setter
-    def index(self, index):
+    def index(self, index) -> None:
         """Set page index."""
         if 0 <= index < len(self):
             self._index = index
 
     @property
-    def buttons(self):
+    def buttons(self) -> Dict[str, "Button"]:
         """Returns the buttons to show in the pagination.
 
         Hidden buttons are not returned.
@@ -154,7 +149,7 @@ class Base(metaclass=_BaseMeta):
         sorted_ = sorted(self._buttons.values(), key=lambda b: b.position)
         return {str(b): b for b in sorted_ if b.should_display(self)}
 
-    def _check(self, payload: discord.RawReactionActionEvent):
+    def _check(self, payload: discord.RawReactionActionEvent) -> bool:
         return (
             self.author is None
             or payload.user_id == self.author.id
@@ -163,7 +158,7 @@ class Base(metaclass=_BaseMeta):
             and str(payload.emoji) in self.buttons
         )
 
-    async def _run(self):
+    async def _run(self) -> None:
         """|coro|
 
         Runs the main logic of the pagination.
@@ -182,7 +177,7 @@ class Base(metaclass=_BaseMeta):
                     task.cancel()
 
                 if len(done) == 0:
-                    raise StopPagination(StopAction.CLEAR_REACTION)
+                    raise StopPagination(StopAction.CLEAR_REACTIONS)
 
                 payload = done.pop().result()
                 await self.dispatch(payload)
@@ -206,7 +201,7 @@ class Base(metaclass=_BaseMeta):
                 task.cancel()
             self.__tasks.clear()
 
-    async def dispatch(self, payload: discord.RawReactionActionEvent):
+    async def dispatch(self, payload: discord.RawReactionActionEvent) -> None:
         """|coro|
 
         Dispatches a reaction and executes the button's coroutine.
@@ -225,7 +220,7 @@ class Base(metaclass=_BaseMeta):
             button = self.buttons[emoji]
             await button(self, payload)
 
-    def _get_page_kwargs(self, index: int = 0):
+    def _get_page_kwargs(self, index: int = 0) -> dict:
         value = self.pages[index]
         if isinstance(value, dict):
             return value
@@ -236,7 +231,7 @@ class Base(metaclass=_BaseMeta):
         else:
             raise TypeError("Invalid type for pages.")
 
-    def _ensure_permissions(self, permissions):
+    def _ensure_permissions(self, permissions: discord.Permissions) -> None:
         if not permissions.send_messages:
             raise CannotSendMessages()
 
@@ -254,14 +249,14 @@ class Base(metaclass=_BaseMeta):
             if not permissions.read_message_history:
                 raise CannotReadMessageHistory()
 
-    def should_add_reactions(self):
+    def should_add_reactions(self) -> bool:
         return len(self) > 1
 
-    async def add_reactions(self):
+    async def add_reactions(self) -> None:
         for emoji in self.buttons:
             await self.message.add_reaction(emoji)
 
-    async def show_page(self, index: int):
+    async def show_page(self, index: int) -> None:
         """|coro|
 
         Shows a specific page at given index.
@@ -275,7 +270,7 @@ class Base(metaclass=_BaseMeta):
         kwargs = self._get_page_kwargs(self.index)
         await self.message.edit(**kwargs)
 
-    async def start(self, ctx: commands.Context):
+    async def start(self, ctx: commands.Context) -> None:
         """|coro|
 
         Start pagination session.
