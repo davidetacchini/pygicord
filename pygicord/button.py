@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, List, Callable
 
 from discord import RawReactionActionEvent
 
@@ -7,9 +7,11 @@ from .utils import ensure_coroutine
 if TYPE_CHECKING:
     from .base import Base
 
-__all__ = ("Button", "button")
+InternalCallback = Callable[["Base", RawReactionActionEvent], None]
+DisplayPredicate = Callable[["Base"], bool]
+InvokePredicate = Callable[["Base", RawReactionActionEvent], bool]
 
-CallbackT = Callable[["Base", RawReactionActionEvent], None]
+__all__ = ("Button", "button")
 
 
 class Button:
@@ -39,13 +41,15 @@ class Button:
     # used in Base metaclass to ensure that the value is a button
     __ensure_button__ = ...
 
-    def __init__(self, *, emoji: str, callback: CallbackT, position: int):
+    def __init__(
+        self, *, emoji: str, callback: InternalCallback, position: int
+    ) -> None:
         self.emoji = emoji
         self.callback = ensure_coroutine(callback)
         self.position = position
 
-        self._display_preds = []
-        self._invoke_preds = []
+        self._display_preds: List[DisplayPredicate] = []
+        self._invoke_preds: List[InvokePredicate] = []
 
     def __str__(self):
         """Returns the button emoji."""
@@ -61,14 +65,14 @@ class Button:
                 return
         await self.callback(base, payload)
 
-    def display_if(self, predicate):
+    def display_if(self, predicate: DisplayPredicate) -> DisplayPredicate:
         """A decorator that registers a predicate that
         determine whether the button should be displayed.
         """
         self._display_preds.append(predicate)
         return predicate
 
-    def invoke_if(self, predicate):
+    def invoke_if(self, predicate: InvokePredicate) -> InvokePredicate:
         """A decorator that registers a predicate that
         determine whether the button should be invoked.
         """
@@ -85,6 +89,12 @@ class Button:
 
 def button(*, emoji: str, position: int):
     """Shorthand decorator for button creation.
+
+    Supported emojis formats:
+        - Emoji: "🚀"
+        - Unicode: "\U0001F680"
+        - Unicode name: "\N{ROCKET}"
+        - Custom emoji: ":custom_emoji:123456"
 
     Parameters
     ----------
