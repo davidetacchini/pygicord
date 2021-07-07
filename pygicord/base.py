@@ -94,6 +94,12 @@ class Base(metaclass=_BaseMeta):
     )
 
     def __init__(self, *, pages: Union[Any, List[Any]], timeout: float = 90.0) -> None:
+        if not isinstance(pages, list):
+            pages = [pages]
+
+        if not len(pages):
+            raise ValueError("Cannot paginate an empty list.")
+
         self.pages = pages
         self.timeout = timeout
 
@@ -110,9 +116,6 @@ class Base(metaclass=_BaseMeta):
 
         self._is_running: bool = False
         self.__tasks: List[asyncio.Task] = []
-
-        if not isinstance(self.pages, list):
-            self.pages = [self.pages]
 
     def __len__(self) -> int:
         """Returns the max number of pages."""
