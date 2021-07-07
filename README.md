@@ -88,7 +88,9 @@ bot.run("token")
 | Config.RICH    | first, previous, stop, next, last, input, lock |
 
 ### Note
-You must set `force_lock` to True if you want to add the lock to all other configurations.
+Config.RICH is the only config to have the lock set by default. You must set `force_lock` to True if you want to add it to all other configurations.
+
+### Example
 
 ```py
 from pygicord import Config, Paginator
