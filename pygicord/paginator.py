@@ -1,14 +1,50 @@
 import asyncio
 
+from enum import IntFlag
+
 from discord import HTTPException
 
 from .base import Base, StopAction, StopPagination
 from .button import button
 
-__all__ = ("Paginator",)
+__all__ = ("Paginator", "Config")
+
+
+class Config(IntFlag):
+    DEFAULT = 0x1  # buttons: first, previous, stop, next, last, input
+    MINIMAL = 0x2  # buttons: previous, stop, next
+    PLAIN = 0x4  # buttons: first, previous, stop, next
+    RICH = 0x8  # buttons: all defaults + lock
 
 
 class Paginator(Base):
+    """The default implementation of the Base class.
+
+    Attributes
+    ----------
+    pages : Union[Any, List[Any]]
+        A list of objects to paginate or just one.
+    timeout : float, default: 90.0
+        The timeout to wait before stopping the paginator session.
+    config : Config, default: Config.DEFAULT
+        The configuration to use.
+    force_lock : bool, default: False
+        Whether to force adding the lock. By default
+        it's added only when using Config.RICH.
+
+    Note
+    ----
+    The reactions are automatically added if, and only if, the
+    pages length is greater than 1.
+    """
+
+    def __init__(
+        self, *, config: Config = Config.DEFAULT, force_lock: bool = False, **kwargs
+    ) -> None:
+        super().__init__(**kwargs)
+        self.config = config
+        self.force_lock = force_lock
+
     @button(emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE}", position=0)
     async def first_page(self, payload):
         """Go to first page."""
@@ -17,7 +53,7 @@ class Paginator(Base):
     @first_page.display_if
     def first_page_display_if(self):
         """Only displays when the pages are atleast 4."""
-        return len(self) > 3
+        return len(self) > 3 and self.config ^ Config.MINIMAL
 
     @button(emoji="\N{BLACK LEFT-POINTING TRIANGLE}", position=1)
     async def previous(self, payload):
@@ -42,7 +78,7 @@ class Paginator(Base):
     @last_page.display_if
     def last_page_display_if(self):
         """Only displays when the pages are atleast 4."""
-        return len(self) > 3
+        return len(self) > 3 and self.config ^ Config.MINIMAL
 
     @button(emoji="\N{INPUT SYMBOL FOR NUMBERS}", position=5)
     async def input_number(self, payload):
@@ -83,7 +119,9 @@ class Paginator(Base):
     @input_number.display_if
     def input_number_display_if(self):
         """Only displays when the pages are atleast 4."""
-        return len(self) > 3
+        return (
+            len(self) > 3 and self.config & Config.DEFAULT or self.config & Config.RICH
+        )
 
     @button(emoji="\N{LOCK}", position=6)
     async def lock_unlock(self, payload):
@@ -109,7 +147,9 @@ class Paginator(Base):
     @lock_unlock.display_if
     def lock_unlock_display_if(self):
         """Hide in DMs."""
-        return self.ctx.guild is not None
+        return (
+            self.ctx.guild is not None and self.force_lock or self.config & Config.RICH
+        )
 
     @lock_unlock.invoke_if
     def lock_unlock_invoke_if(self, payload):
