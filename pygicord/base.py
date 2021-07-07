@@ -289,6 +289,8 @@ class Base(metaclass=_BaseMeta):
             Bot does not have proper permissions.
         TypeError
             Invalid type for pages.
+        ValueError
+            Pages is an empty list.
         """
         self.ctx = ctx
         self.bot = ctx.bot
