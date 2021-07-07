@@ -71,7 +71,32 @@ bot.run("token")
 
 ## Attributes
 
-| Name    | Description                                                | Type                  | Default |
-|---------|------------------------------------------------------------|-----------------------|---------|
-| pages   | A list of objects to paginate or just one.                 | Union[Any, List[Any]] | /       |
-| timeout | The timeout to wait before stopping the paginator session. | float                 | 90.0    |
+| Name       | Description                                                | Type                  | Default        |
+|------------|------------------------------------------------------------|-----------------------|----------------|
+| pages      | A list of objects to paginate or just one.                 | Union[Any, List[Any]] | /              |
+| timeout    | The timeout to wait before stopping the paginator session. | float                 | 90.0           |
+| config     | The configuration to use.                                  | pygicord.Config       | Config.DEFAULT |
+| force_lock | Whether to force adding the lock.                          | bool                  | False          |
+
+## Config
+
+| Type           | Buttons                                        |
+|----------------|------------------------------------------------|
+| Config.DEFAULT | first, previous, stop, next, last, input       |
+| Config.MINIMAL |        previous, stop, next                    |
+| Config.PLAIN   | first, previous, stop, next, last              |
+| Config.RICH    | first, previous, stop, next, last, input, lock |
+
+### Note
+You must set `force_lock` to True if you want to add the lock to all other configurations.
+
+```py
+from pygicord import Config, Paginator
+
+...
+
+paginator = Paginator(pages=pages, config=Config.MINIMAL)
+await paginator.start(ctx)
+
+...
+```
