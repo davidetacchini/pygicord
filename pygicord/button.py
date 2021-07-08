@@ -51,11 +51,11 @@ class Button:
         self._display_preds: List[DisplayPredicate] = []
         self._invoke_preds: List[InvokePredicate] = []
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Returns the button emoji."""
         return self.emoji
 
-    async def __call__(self, base: "Base", payload: RawReactionActionEvent):
+    async def __call__(self, base: "Base", payload: RawReactionActionEvent) -> None:
         """|coro|
 
         Calls the internal button callback.
@@ -79,7 +79,7 @@ class Button:
         self._invoke_preds.append(predicate)
         return predicate
 
-    def should_display(self, base):
+    def should_display(self, base) -> bool:
         """Returns whether a button should be displayed."""
         for pred in self._display_preds:
             if not pred(base):
