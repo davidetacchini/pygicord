@@ -36,14 +36,7 @@ pip install git+https://github.com/davidetacchini/pygicord
 ## Basic example
 
 ```py
-import discord
-from discord.ext import commands
-
 from pygicord import Paginator
-
-
-bot = commands.Bot(command_prefix=".")
-
 
 def get_pages():
     pages = []
@@ -59,14 +52,6 @@ async def test(ctx):
     pages = get_pages()
     paginator = Paginator(pages=pages)
     await paginator.start(ctx)
-
-
-@bot.event
-async def on_ready():
-    print("Ready!")
-
-
-bot.run("token")
 ```
 
 ## Attributes
@@ -75,7 +60,7 @@ bot.run("token")
 |------------|------------------------------------------------------------|-----------------------|----------------|
 | pages      | A list of objects to paginate or just one.                 | Union[Any, List[Any]] | /              |
 | timeout    | The timeout to wait before stopping the paginator session. | float                 | 90.0           |
-| emojis    | The custom emojis to use. | Union[list, tuple]                 | / |
+| emojis     | The custom emojis to use.                                  | Union[list, tuple]    | /              |
 | config     | The configuration to use.                                  | pygicord.Config       | Config.DEFAULT |
 | force_lock | Whether to force adding the lock.                          | bool                  | False          |
 
@@ -89,6 +74,7 @@ bot.run("token")
 | Config.RICH    | first, previous, stop, next, last, input, lock |
 
 ### Note
+
 Config.RICH is the only config to have the lock set by default. You must set `force_lock` to True if you want to add it to all other configurations.
 
 ### Example
@@ -105,6 +91,7 @@ async def test(ctx):
 ## Custom Emojis
 
 ### Note
+
 Emojis must be passed in their respective order. The order is computed by the position of the control in the controller.
 
 ```py
