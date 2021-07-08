@@ -75,6 +75,7 @@ bot.run("token")
 |------------|------------------------------------------------------------|-----------------------|----------------|
 | pages      | A list of objects to paginate or just one.                 | Union[Any, List[Any]] | /              |
 | timeout    | The timeout to wait before stopping the paginator session. | float                 | 90.0           |
+| emojis    | The custom emojis to use. | Union[list, tuple]                 | / |
 | config     | The configuration to use.                                  | pygicord.Config       | Config.DEFAULT |
 | force_lock | Whether to force adding the lock.                          | bool                  | False          |
 
@@ -95,10 +96,56 @@ Config.RICH is the only config to have the lock set by default. You must set `fo
 ```py
 from pygicord import Config, Paginator
 
-...
+@bot.command()
+async def test(ctx):
+	paginator = Paginator(pages=pages, config=Config.MINIMAL)
+	await paginator.start(ctx)
+```
 
-paginator = Paginator(pages=pages, config=Config.MINIMAL)
-await paginator.start(ctx)
+## Custom Emojis
 
-...
+### Note
+Emojis must be passed in their respective order. The order is computed by the position of the control in the controller.
+
+```py
+from pygicord import Paginator
+
+# this will only change the "stop" emoji
+custom_emojis = (None, None, "\N{ROCKET}", None, None, None, None)
+
+@bot.command
+async def test(ctx):
+	paginator = Paginator(pages=pages, emojis=custom_emojis)
+	await paginator.start(ctx)
+```
+
+To only change one or few emojis, you must set others to None.
+
+## Custom Paginator
+
+```py
+from pygicord import Base, StopAction, StopPagination, control
+
+class MyPaginator(Base):
+
+    @control(emoji="\N{ROCKET}", position=0)
+    async def stop(self, payload):
+		"""Stops pagination."""
+        raise StopPagination(StopAction.DELETE_MESSAGE)
+
+    @stop.invoke_if
+    def stop_invoke_if(self, payload):
+        """Invocable only from the author."""
+        return self.ctx.author.id == payload.user_id
+```
+
+Then, when you want to use it:
+
+```py
+pages = ["Page no. 1", "Page no. 2"]
+
+@bot.command()
+async def test(ctx):
+    paginator = MyPaginator(pages=pages)
+    await paginator.start(ctx)
 ```
