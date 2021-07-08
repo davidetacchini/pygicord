@@ -64,7 +64,26 @@ async def test(ctx):
 | config     | The configuration to use.                                  | pygicord.Config       | Config.DEFAULT |
 | force_lock | Whether to force adding the lock.                          | bool                  | False          |
 
-## Config
+## Custom Emojis
+
+### Note
+
+* Emojis must be passed in their respective order. The order is computed by the position of the control in the controller.
+* To only change one or few emojis, you must set others to None.
+
+```py
+from pygicord import Paginator
+
+# this will only change the "stop" emoji
+custom_emojis = (None, None, "\N{ROCKET}", None, None, None, None)
+
+@bot.command
+async def test(ctx):
+    paginator = Paginator(pages=pages, emojis=custom_emojis)
+    await paginator.start(ctx)
+```
+
+## Paginator Config
 
 | Type           | Buttons                                        |
 |----------------|------------------------------------------------|
@@ -84,29 +103,9 @@ from pygicord import Config, Paginator
 
 @bot.command()
 async def test(ctx):
-	paginator = Paginator(pages=pages, config=Config.MINIMAL)
-	await paginator.start(ctx)
+    paginator = Paginator(pages=pages, config=Config.MINIMAL)
+    await paginator.start(ctx)
 ```
-
-## Custom Emojis
-
-### Note
-
-Emojis must be passed in their respective order. The order is computed by the position of the control in the controller.
-
-```py
-from pygicord import Paginator
-
-# this will only change the "stop" emoji
-custom_emojis = (None, None, "\N{ROCKET}", None, None, None, None)
-
-@bot.command
-async def test(ctx):
-	paginator = Paginator(pages=pages, emojis=custom_emojis)
-	await paginator.start(ctx)
-```
-
-To only change one or few emojis, you must set others to None.
 
 ## Custom Paginator
 
