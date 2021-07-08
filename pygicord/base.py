@@ -1,7 +1,7 @@
 import asyncio
 
 from enum import IntFlag
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union, Optional
 
 import discord
 
@@ -72,6 +72,8 @@ class Base(metaclass=_BaseMeta):
         A list of objects to paginate or just one.
     timeout : float, default: 90.0
         The timeout to wait before stopping the paginator session.
+    emojis : Union[list, tuple]
+        The custom emojis to use.
 
     Note
     ----
@@ -82,6 +84,7 @@ class Base(metaclass=_BaseMeta):
     __slots__ = (
         "pages",
         "timeout",
+        "emojis",
         "ctx",
         "bot",
         "message",
@@ -93,15 +96,25 @@ class Base(metaclass=_BaseMeta):
         "__lock",
     )
 
-    def __init__(self, *, pages: Union[Any, List[Any]], timeout: float = 90.0) -> None:
+    def __init__(
+        self,
+        *,
+        pages: Union[Any, List[Any]],
+        timeout: float = 90.0,
+        emojis: Optional[Union[list, tuple]] = None,
+    ) -> None:
         if not isinstance(pages, list):
             pages = [pages]
 
         if not len(pages):
             raise ValueError("Cannot paginate an empty list.")
 
+        if len(emojis) < 7:
+            raise ValueError(f"Expected 7 emojis, received {len(emojis)} instead.")
+
         self.pages = pages
         self.timeout = timeout
+        self.emojis = emojis
 
         self.ctx: commands.Context = None
         self.bot: discord.Client = None
@@ -149,8 +162,27 @@ class Base(metaclass=_BaseMeta):
             A dictionary of Button instances with their
             respective emoji as key.
         """
+        return self._buttons
+
+    def resolve_buttons(self) -> None:
+        """Resolve buttons with custom emojis (if any)."""
+        self._buttons = self.__class__.get_buttons()
         sorted_ = sorted(self._buttons.values(), key=lambda b: b.position)
-        return {str(b): b for b in sorted_ if b.should_display(self)}
+        buttons = {str(b): b for b in sorted_ if b.should_display(self)}
+
+        if self.emojis is None or not all(self.emojis) or not len(self.emojis):
+            self._buttons = buttons
+            return
+
+        new_buttons = {}
+        for i, button in enumerate(buttons):
+            emoji = self.emojis[i]
+            if emoji is not None:
+                new_buttons[emoji] = buttons[button]
+            else:
+                new_buttons[button] = buttons[button]
+
+        self._buttons = new_buttons
 
     def _check(self, payload: discord.RawReactionActionEvent) -> bool:
         return (
@@ -290,7 +322,8 @@ class Base(metaclass=_BaseMeta):
         TypeError
             Invalid type for pages.
         ValueError
-            Pages is an empty list.
+            - Pages is an empty list.
+            - Emojis are less than 7.
         """
         self.ctx = ctx
         self.bot = ctx.bot
@@ -303,7 +336,7 @@ class Base(metaclass=_BaseMeta):
             self.message = await ctx.send(**kwargs)
 
         if self.should_add_reactions():
-            self._buttons = self.__class__.get_buttons()
+            self.resolve_buttons()
             self._is_running = True
             self.__tasks.append(self.loop.create_task(self._run()))
             self.__tasks.append(self.loop.create_task(self.add_reactions()))

@@ -26,6 +26,8 @@ class Paginator(Base):
         A list of objects to paginate or just one.
     timeout : float, default: 90.0
         The timeout to wait before stopping the paginator session.
+    emojis : Union[list, tuple]
+        The custom emojis to use.
     config : Config, default: Config.DEFAULT
         The configuration to use.
     force_lock : bool, default: False
