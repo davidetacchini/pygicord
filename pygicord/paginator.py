@@ -63,7 +63,7 @@ class Paginator(Base):
         await self.show_page(self.index - 1)
 
     @control(emoji="\N{BLACK SQUARE FOR STOP}", position=2)
-    async def close(self, payload):
+    async def stop(self, payload):
         """Stop pagination session."""
         raise StopPagination(StopAction.DELETE_MESSAGE)
 
