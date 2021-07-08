@@ -1,6 +1,6 @@
 from .base import *
 from .utils import *
-from .button import *
+from .control import *
 from .paginator import *
 from .exceptions import *
 

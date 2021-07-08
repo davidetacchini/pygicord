@@ -11,23 +11,23 @@ InternalCallback = Callable[["Base", RawReactionActionEvent], None]
 DisplayPredicate = Callable[["Base"], bool]
 InvokePredicate = Callable[["Base", RawReactionActionEvent], bool]
 
-__all__ = ("Button", "button")
+__all__ = ("Control", "control")
 
 
-class Button:
-    """Represent a Button class for the paginator.
+class Control:
+    """Represent an abstract Control class.
 
-    Consider using :func:button to create a button.
+    Consider using :func:`control` to create a control.
 
     Attributes
     ----------
     emoji : str
-        The emoji to use as the button.
+        The emoji to use as the control.
     callback : Callable[[pygicord.Base, discord.RawReactionActionEvent], None]
-        A function that is called when the button is pressed.
+        A function that is called when the control is pressed.
         Implicitly converted to coroutine if it's not.
     position : int
-        The positon of the button. Starts from 0.
+        The positon of the control. Starts from 0.
     """
 
     __slots__ = (
@@ -38,8 +38,8 @@ class Button:
         "_invoke_preds",
     )
 
-    # used in Base metaclass to ensure that the value is a button
-    __ensure_button__ = ...
+    # used in Base metaclass to ensure that the value is a control
+    __ensure_control__ = ...
 
     def __init__(
         self, *, emoji: str, callback: InternalCallback, position: int
@@ -52,13 +52,13 @@ class Button:
         self._invoke_preds: List[InvokePredicate] = []
 
     def __str__(self) -> str:
-        """Returns the button emoji."""
+        """Returns the control emoji."""
         return self.emoji
 
     async def __call__(self, base: "Base", payload: RawReactionActionEvent) -> None:
         """|coro|
 
-        Calls the internal button callback.
+        Calls the internal control callback.
         """
         for pred in self._invoke_preds:
             if not pred(base, payload):
@@ -67,28 +67,28 @@ class Button:
 
     def display_if(self, predicate: DisplayPredicate) -> DisplayPredicate:
         """A decorator that registers a predicate that
-        determine whether the button should be displayed.
+        determine whether the control should be displayed.
         """
         self._display_preds.append(predicate)
         return predicate
 
     def invoke_if(self, predicate: InvokePredicate) -> InvokePredicate:
         """A decorator that registers a predicate that
-        determine whether the button should be invoked.
+        determine whether the control should be invoked.
         """
         self._invoke_preds.append(predicate)
         return predicate
 
     def should_display(self, base) -> bool:
-        """Returns whether a button should be displayed."""
+        """Returns whether a control should be displayed."""
         for pred in self._display_preds:
             if not pred(base):
                 return False
         return True
 
 
-def button(*, emoji: str, position: int):
-    """Shorthand decorator for button creation.
+def control(*, emoji: str, position: int):
+    """Shorthand decorator for control creation.
 
     Supported emojis formats:
         - Emoji: "🚀"
@@ -99,14 +99,14 @@ def button(*, emoji: str, position: int):
     Parameters
     ----------
     emoji : str
-        The emoji to use as the button.
+        The emoji to use as the control.
     position : int
-        The positon of the button. 0-based.
+        The positon of the control. 0-based.
 
     Example
     -------
     class Paginator(Base):
-        @button(emoji="\N{BLACK SQUARE FOR STOP}", position=0)
+        @control(emoji="\N{BLACK SQUARE FOR STOP}", position=0)
         async def close(self, payload):
             '''Stop the pagination session.'''
             self.stop()
@@ -118,6 +118,6 @@ def button(*, emoji: str, position: int):
     """
 
     def decorator(coro):
-        return Button(emoji=emoji, callback=coro, position=position)
+        return Control(emoji=emoji, callback=coro, position=position)
 
     return decorator

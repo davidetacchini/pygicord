@@ -5,16 +5,16 @@ from enum import IntFlag
 from discord import HTTPException
 
 from .base import Base, StopAction, StopPagination
-from .button import button
+from .control import control
 
 __all__ = ("Paginator", "Config")
 
 
 class Config(IntFlag):
-    DEFAULT = 0x1  # buttons: first, previous, stop, next, last, input
-    MINIMAL = 0x2  # buttons: previous, stop, next
-    PLAIN = 0x4  # buttons: first, previous, stop, next
-    RICH = 0x8  # buttons: all defaults + lock
+    DEFAULT = 0x1  # controller: first, previous, stop, next, last, input
+    MINIMAL = 0x2  # controller: previous, stop, next
+    PLAIN = 0x4  # controller: first, previous, stop, next
+    RICH = 0x8  # controller: all defaults + lock
 
 
 class Paginator(Base):
@@ -47,7 +47,7 @@ class Paginator(Base):
         self.config = config
         self.force_lock = force_lock
 
-    @button(emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE}", position=0)
+    @control(emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE}", position=0)
     async def first_page(self, payload):
         """Go to first page."""
         await self.show_page(0)
@@ -57,22 +57,22 @@ class Paginator(Base):
         """Only displays when the pages are atleast 4."""
         return len(self) > 3 and self.config ^ Config.MINIMAL
 
-    @button(emoji="\N{BLACK LEFT-POINTING TRIANGLE}", position=1)
+    @control(emoji="\N{BLACK LEFT-POINTING TRIANGLE}", position=1)
     async def previous(self, payload):
         """Go to previous page."""
         await self.show_page(self.index - 1)
 
-    @button(emoji="\N{BLACK SQUARE FOR STOP}", position=2)
+    @control(emoji="\N{BLACK SQUARE FOR STOP}", position=2)
     async def close(self, payload):
         """Stop pagination session."""
         raise StopPagination(StopAction.DELETE_MESSAGE)
 
-    @button(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}", position=3)
+    @control(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}", position=3)
     async def next(self, payload):
         """Go to next page."""
         await self.show_page(self.index + 1)
 
-    @button(emoji="\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE}", position=4)
+    @control(emoji="\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE}", position=4)
     async def last_page(self, payload):
         """Go to last page."""
         await self.show_page(len(self) - 1)
@@ -82,7 +82,7 @@ class Paginator(Base):
         """Only displays when the pages are atleast 4."""
         return len(self) > 3 and self.config ^ Config.MINIMAL
 
-    @button(emoji="\N{INPUT SYMBOL FOR NUMBERS}", position=5)
+    @control(emoji="\N{INPUT SYMBOL FOR NUMBERS}", position=5)
     async def input_number(self, payload):
         """Enter a page number to jump to."""
         lock = self.__dict__.setdefault("lock", asyncio.Lock())
@@ -125,7 +125,7 @@ class Paginator(Base):
             len(self) > 3 and self.config & Config.DEFAULT or self.config & Config.RICH
         )
 
-    @button(emoji="\N{LOCK}", position=6)
+    @control(emoji="\N{LOCK}", position=6)
     async def lock_unlock(self, payload):
         """Allows other members to interact with the paginator."""
         lock = self.__dict__.setdefault("lock", asyncio.Lock())
