@@ -10,7 +10,7 @@ from discord.ext import commands
 from .exceptions import *
 
 if TYPE_CHECKING:
-    from .button import Button
+    from .control import Control
 
 __all__ = ("Base", "StopAction", "StopPagination")
 
@@ -40,25 +40,25 @@ class StopPagination(Exception):
 class _BaseMeta(type):
     def __new__(cls, name, bases, attrs):
         cls_ = super().__new__(cls, name, bases, attrs)
-        buttons = []
+        controls = []
 
         for base in reversed(cls_.__mro__):
             for elem, value in base.__dict__.items():
                 try:
-                    value.__ensure_button__
+                    value.__ensure_control__
                 except AttributeError:
                     continue
                 else:
-                    buttons.append(value)
+                    controls.append(value)
 
-        cls_.__buttons__ = buttons
+        cls_.__controls__ = controls
         return cls_
 
-    def get_buttons(cls):
-        buttons = {}
-        for button in cls.__buttons__:
-            buttons[str(button)] = button
-        return buttons
+    def get_controller(cls):
+        controller = {}
+        for control in cls.__controls__:
+            controller[str(control)] = control
+        return controller
 
 
 class Base(metaclass=_BaseMeta):
@@ -89,7 +89,7 @@ class Base(metaclass=_BaseMeta):
         "bot",
         "message",
         "_index",
-        "_buttons",
+        "_controller",
         "author",
         "_is_running",
         "__tasks",
@@ -109,9 +109,6 @@ class Base(metaclass=_BaseMeta):
         if not len(pages):
             raise ValueError("Cannot paginate an empty list.")
 
-        if len(emojis) < 7:
-            raise ValueError(f"Expected 7 emojis, received {len(emojis)} instead.")
-
         self.pages = pages
         self.timeout = timeout
         self.emojis = emojis
@@ -123,7 +120,7 @@ class Base(metaclass=_BaseMeta):
         self._index: int = 0
 
         # override on startup if should_add_reactions
-        self._buttons: Dict[str, "Button"] = {}
+        self._controller: Dict[str, "Control"] = {}
 
         self.author: discord.Member = None
 
@@ -151,38 +148,50 @@ class Base(metaclass=_BaseMeta):
             self._index = index
 
     @property
-    def buttons(self) -> Dict[str, "Button"]:
-        """Returns the buttons to show in the pagination.
+    def controller(self) -> Dict[str, "Control"]:
+        """Returns the control to show in the pagination.
 
-        Hidden buttons are not returned.
+        Hidden control are not returned.
 
         Returns
         -------
-        Dict[str, Button]
-            A dictionary of Button instances with their
+        Dict[str, Control]
+            A dictionary of Control instances with their
             respective emoji as key.
         """
-        return self._buttons
+        return self._controller
 
-    def resolve_buttons(self) -> None:
-        """Resolve buttons with custom emojis (if any)."""
-        self._buttons = self.__class__.get_buttons()
-        sorted_ = sorted(self._buttons.values(), key=lambda b: b.position)
-        buttons = {str(b): b for b in sorted_ if b.should_display(self)}
+    def resolve_controller(self) -> None:
+        """Resolve controller with custom emojis (if any)."""
+        self._controller = self.__class__.get_controller()
+        sorted_ = sorted(self._controller.values(), key=lambda c: c.position)
+        controller = {str(c): c for c in sorted_ if c.should_display(self)}
 
-        if self.emojis is None or not all(self.emojis) or not len(self.emojis):
-            self._buttons = buttons
+        if self.emojis is not None and len(self.emojis) < 7:
+            raise ValueError(
+                f"Expected {len(controller)} emojis, received {len(self.emojis)} instead."
+            )
+
+        if self.emojis is None or all(e is None for e in self.emojis):
+            self._controller = controller
             return
 
-        new_buttons = {}
-        for i, button in enumerate(buttons):
-            emoji = self.emojis[i]
-            if emoji is not None:
-                new_buttons[emoji] = buttons[button]
+        new_controller = {}
+        for emoji in controller:
+            control = controller[emoji]
+            # using control's position as index to make sure everything goes
+            # smooth. E.g. by using Config.MINIMAL, the controller will
+            # have previous, stop and next reactions. In the cache the
+            # controls will always be 7 (in this case), thus, the position
+            # is always consinstent. This is guarded by Control.display_if
+            # since it WONT remove not displayed controls from the cache.
+            new_emoji = self.emojis[control.position]
+            if new_emoji is not None:
+                new_controller[new_emoji] = controller[emoji]
             else:
-                new_buttons[button] = buttons[button]
+                new_controller[emoji] = controller[emoji]
 
-        self._buttons = new_buttons
+        self._controller = new_controller
 
     def _check(self, payload: discord.RawReactionActionEvent) -> bool:
         return (
@@ -190,7 +199,7 @@ class Base(metaclass=_BaseMeta):
             or payload.user_id == self.author.id
             and payload.user_id != self.bot.user.id
             and payload.message_id == self.message.id
-            and str(payload.emoji) in self.buttons
+            and str(payload.emoji) in self.controller
         )
 
     async def _run(self) -> None:
@@ -239,21 +248,21 @@ class Base(metaclass=_BaseMeta):
     async def dispatch(self, payload: discord.RawReactionActionEvent) -> None:
         """|coro|
 
-        Dispatches a reaction and executes the button's coroutine.
+        Dispatches a reaction and executes the control's coroutine.
 
         Parameters
         ----------
         payload : discord.RawReactionActionEvent
             The payload containing all the information needed
-            from the button coroutine to work properly.
+            from the cotrol coroutine to work properly.
         """
         if payload.message_id != self.message.id:
             return
 
         if self._is_running:
             emoji = str(payload.emoji)
-            button = self.buttons[emoji]
-            await button(self, payload)
+            control = self.controller[emoji]
+            await control(self, payload)
 
     def _get_page_kwargs(self, index: int = 0) -> dict:
         value = self.pages[index]
@@ -288,7 +297,7 @@ class Base(metaclass=_BaseMeta):
         return len(self) > 1
 
     async def add_reactions(self) -> None:
-        for emoji in self.buttons:
+        for emoji in self.controller:
             await self.message.add_reaction(emoji)
 
     async def show_page(self, index: int) -> None:
@@ -323,7 +332,9 @@ class Base(metaclass=_BaseMeta):
             Invalid type for pages.
         ValueError
             - Pages is an empty list.
-            - Emojis are less than 7.
+            - Emojis are less than the controls instantiated
+              in the paginator class. e.g. 7 in the defaualt
+              case.
         """
         self.ctx = ctx
         self.bot = ctx.bot
@@ -336,7 +347,7 @@ class Base(metaclass=_BaseMeta):
             self.message = await ctx.send(**kwargs)
 
         if self.should_add_reactions():
-            self.resolve_buttons()
+            self.resolve_controller()
             self._is_running = True
             self.__tasks.append(self.loop.create_task(self._run()))
             self.__tasks.append(self.loop.create_task(self.add_reactions()))
