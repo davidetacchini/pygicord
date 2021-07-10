@@ -301,10 +301,7 @@ class Base(metaclass=_BaseMeta):
         TypeError
             Invalid type for pages.
         ValueError
-            - Pages is an empty list.
-            - Emojis are less than the controls instantiated
-              in the paginator class. e.g. 7 in the defaualt
-              case.
+            Pages is an empty list.
         """
         self.ctx = ctx
         self.bot = ctx.bot
