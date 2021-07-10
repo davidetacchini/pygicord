@@ -1,6 +1,7 @@
 import asyncio
 
 from enum import IntFlag
+from typing import Optional
 
 from discord import HTTPException
 
@@ -26,7 +27,7 @@ class Paginator(Base):
         A list of objects to paginate or just one.
     timeout : float, default: 90.0
         The timeout to wait before stopping the paginator session.
-    emojis : Union[list, tuple]
+    emojis : dict
         The custom emojis to use.
     config : Config, default: Config.DEFAULT
         The configuration to use.
@@ -41,11 +42,32 @@ class Paginator(Base):
     """
 
     def __init__(
-        self, *, config: Config = Config.DEFAULT, force_lock: bool = False, **kwargs
+        self,
+        *,
+        emojis: Optional[dict] = None,
+        config: Config = Config.DEFAULT,
+        force_lock: bool = False,
+        **kwargs,
     ) -> None:
-        super().__init__(**kwargs)
+        self.emojis = emojis
         self.config = config
         self.force_lock = force_lock
+        super().__init__(**kwargs)
+
+    def _resolve_controller(self) -> None:
+        """Resolve controller with custom emojis (if any)."""
+        controller = self.raw_controller
+
+        if self.emojis:
+            for old, new in self.emojis.items():
+                try:
+                    controller[old].emoji = new
+                except KeyError:
+                    super()._resolve_controller()
+                    return
+
+        sorted_ = sorted(controller.values(), key=lambda c: c.position)
+        self.controller = {str(c): c for c in sorted_ if c.should_display(self)}
 
     @control(emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE}", position=0)
     async def first_page(self, payload):
@@ -64,8 +86,13 @@ class Paginator(Base):
 
     @control(emoji="\N{BLACK SQUARE FOR STOP}", position=2)
     async def stop(self, payload):
-        """Stop pagination session."""
+        """Stop pagination."""
         raise StopPagination(StopAction.DELETE_MESSAGE)
+
+    @stop.invoke_if
+    def stop_invoke_if(self, payload):
+        """Only the author can invoke this."""
+        return self.ctx.author.id == payload.user_id
 
     @control(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}", position=3)
     async def next(self, payload):

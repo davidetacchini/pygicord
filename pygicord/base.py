@@ -1,7 +1,7 @@
 import asyncio
 
 from enum import IntFlag
-from typing import TYPE_CHECKING, Any, Dict, List, Union, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 import discord
 
@@ -72,8 +72,6 @@ class Base(metaclass=_BaseMeta):
         A list of objects to paginate or just one.
     timeout : float, default: 90.0
         The timeout to wait before stopping the paginator session.
-    emojis : Union[list, tuple]
-        The custom emojis to use.
 
     Note
     ----
@@ -84,25 +82,18 @@ class Base(metaclass=_BaseMeta):
     __slots__ = (
         "pages",
         "timeout",
-        "emojis",
         "ctx",
         "bot",
         "message",
+        "author",
         "_index",
         "_controller",
-        "author",
         "_is_running",
         "__tasks",
         "__lock",
     )
 
-    def __init__(
-        self,
-        *,
-        pages: Union[Any, List[Any]],
-        timeout: float = 90.0,
-        emojis: Optional[Union[list, tuple]] = None,
-    ) -> None:
+    def __init__(self, *, pages: Union[Any, List[Any]], timeout: float = 90.0) -> None:
         if not isinstance(pages, list):
             pages = [pages]
 
@@ -111,18 +102,15 @@ class Base(metaclass=_BaseMeta):
 
         self.pages = pages
         self.timeout = timeout
-        self.emojis = emojis
 
         self.ctx: commands.Context = None
         self.bot: discord.Client = None
         self.message: discord.Message = None
+        self.author: discord.Member = None
 
         self._index: int = 0
-
-        # override on startup if should_add_reactions
+        # override on startup
         self._controller: Dict[str, "Control"] = {}
-
-        self.author: discord.Member = None
 
         self._is_running: bool = False
         self.__tasks: List[asyncio.Task] = []
@@ -142,16 +130,21 @@ class Base(metaclass=_BaseMeta):
         return self._index
 
     @index.setter
-    def index(self, index) -> None:
+    def index(self, index: int) -> None:
         """Set page index."""
         if 0 <= index < len(self):
             self._index = index
 
     @property
-    def controller(self) -> Dict[str, "Control"]:
-        """Returns the control to show in the pagination.
+    def raw_controller(self) -> Dict[str, "Control"]:
+        """Get the raw controller."""
+        return self.__class__.get_controller()
 
-        Hidden control are not returned.
+    @property
+    def controller(self) -> Dict[str, "Control"]:
+        """Get the controller.
+
+        Hidden controls are not included.
 
         Returns
         -------
@@ -161,37 +154,14 @@ class Base(metaclass=_BaseMeta):
         """
         return self._controller
 
-    def resolve_controller(self) -> None:
-        """Resolve controller with custom emojis (if any)."""
-        self._controller = self.__class__.get_controller()
-        sorted_ = sorted(self._controller.values(), key=lambda c: c.position)
-        controller = {str(c): c for c in sorted_ if c.should_display(self)}
+    @controller.setter
+    def controller(self, controller: Dict[str, "Control"]) -> None:
+        self._controller = controller
 
-        if self.emojis is not None and len(self.emojis) < 7:
-            raise ValueError(
-                f"Expected {len(controller)} emojis, received {len(self.emojis)} instead."
-            )
-
-        if self.emojis is None or all(e is None for e in self.emojis):
-            self._controller = controller
-            return
-
-        new_controller = {}
-        for emoji in controller:
-            control = controller[emoji]
-            # using control's position as index to make sure everything goes
-            # smooth. E.g. by using Config.MINIMAL, the controller will
-            # have previous, stop and next reactions. In the cache the
-            # controls will always be 7 (in this case), thus, the position
-            # is always consinstent. This is guarded by Control.display_if
-            # since it WONT remove not displayed controls from the cache.
-            new_emoji = self.emojis[control.position]
-            if new_emoji is not None:
-                new_controller[new_emoji] = controller[emoji]
-            else:
-                new_controller[emoji] = controller[emoji]
-
-        self._controller = new_controller
+    def _resolve_controller(self) -> None:
+        """Resolve the controller."""
+        sorted_ = sorted(self.raw_controller.values(), key=lambda c: c.position)
+        self.controller = {str(c): c for c in sorted_ if c.should_display(self)}
 
     def _check(self, payload: discord.RawReactionActionEvent) -> bool:
         return (
@@ -347,7 +317,7 @@ class Base(metaclass=_BaseMeta):
             self.message = await ctx.send(**kwargs)
 
         if self.should_add_reactions():
-            self.resolve_controller()
+            self._resolve_controller()
             self._is_running = True
             self.__tasks.append(self.loop.create_task(self._run()))
             self.__tasks.append(self.loop.create_task(self.add_reactions()))
