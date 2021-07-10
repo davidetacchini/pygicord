@@ -144,8 +144,6 @@ async def test(ctx):
 
 ### New Paginator
 
-Not recommended, unless you know what you are doing.
-
 ```py
 from pygicord import Base, StopAction, StopPagination, control
 
