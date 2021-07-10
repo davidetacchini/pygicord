@@ -91,7 +91,7 @@ class Paginator(Base):
 
     @stop.invoke_if
     def stop_invoke_if(self, payload):
-        """Only the author can invoke this."""
+        """Only the author can stop the session."""
         return self.ctx.author.id == payload.user_id
 
     @control(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}", position=3)
