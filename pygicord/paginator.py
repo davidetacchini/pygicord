@@ -56,8 +56,7 @@ class Paginator(Base):
                 try:
                     controller[old].emoji = new
                 except KeyError:
-                    super()._resolve_controller()
-                    return
+                    pass
 
         sorted_ = sorted(controller.values(), key=lambda c: c.position)
         self.controller = {str(c): c for c in sorted_ if c.should_display(self)}
