@@ -58,13 +58,13 @@ async def test(ctx):
 
 ### Attributes
 
-| Name       | Description                                                | Type                  | Default         |
-|------------|------------------------------------------------------------|-----------------------|-----------------|
-| pages      | A list of objects to paginate or just one.                 | Union[Any, List[Any]] | /               |
-| timeout    | The timeout to wait before stopping the paginator session. | float                 | 90.0            |
-| emojis     | The custom emojis to use.                                  | dict                  | Discord natives |
-| config     | The configuration to use.                                  | pygicord.Config       | Config.DEFAULT  |
-| force_lock | Whether to force adding the lock.                          | bool                  | False           |
+| Name       | Description                                                 | Type                  | Default         |
+|------------|-------------------------------------------------------------|-----------------------|-----------------|
+| pages      | A list of objects to paginate or just one.                  | Union[Any, List[Any]] |                 |
+| timeout    | The timeout to wait before stopping the pagination session. | float                 | 90.0            |
+| emojis     | The custom emojis to use.                                   | dict                  | Discord natives |
+| config     | The configuration to use.                                   | pygicord.Config       | Config.DEFAULT  |
+| force_lock | Whether to force adding the lock.                           | bool                  | False           |
 
 Supported emojis formats:
 * Emoji: "🚀"
