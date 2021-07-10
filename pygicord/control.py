@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Callable
+from typing import TYPE_CHECKING, List, Union, Callable
 
 from discord import RawReactionActionEvent
 
@@ -26,7 +26,7 @@ class Control:
     callback : Callable[[pygicord.Base, discord.RawReactionActionEvent], None]
         A function that is called when the control is pressed.
         Implicitly converted to coroutine if it's not.
-    position : int
+    position : Union[int, float]
         The positon of the control. Starts from 0.
     """
 
@@ -42,7 +42,7 @@ class Control:
     __ensure_control__ = ...
 
     def __init__(
-        self, *, emoji: str, callback: InternalCallback, position: int
+        self, *, emoji: str, callback: InternalCallback, position: Union[int, float]
     ) -> None:
         self.emoji = emoji
         self.callback = ensure_coroutine(callback)
@@ -87,7 +87,7 @@ class Control:
         return True
 
 
-def control(*, emoji: str, position: int):
+def control(*, emoji: str, position: Union[int, float]):
     """Shorthand decorator for control creation.
 
     Supported emojis formats:
@@ -100,7 +100,7 @@ def control(*, emoji: str, position: int):
     ----------
     emoji : str
         The emoji to use as the control.
-    position : int
+    position : Union[int, float]
         The positon of the control. 0-based.
 
     Example
