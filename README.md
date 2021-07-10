@@ -77,11 +77,15 @@ Supported emojis formats:
 ```py
 from pygicord import Paginator
 
-
-# this will change both the "stop" and "lock" emojis
-custom_emojis = {
-    "\N{BLACK SQUARE FOR STOP"}": "\N{ROCKET}",
-    "\N{LOCK}: "\N{BUSTS IN SILHOUETTE}
+# copy this and replace the values.
+custom_emojis = { 
+    "\U000023EA": "REPLACE (first page)",
+    "\U000025C0": "REPLACE (previous page)",
+    "\U000023F9": "REPLACE (stop session)",
+    "\U000025B6": "REPLACE (next page)",
+    "\U000023E9": "REPLACE (last page)",
+    "\U0001F522": "REPLACE (input numbers)",
+    "\U0001F512": "REPLACE (lock unlock)",
 }
 
 
