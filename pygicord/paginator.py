@@ -1,21 +1,14 @@
 import asyncio
 
-from enum import IntFlag
 from typing import Optional
 
 from discord import HTTPException
 
 from .base import Base, StopAction, StopPagination
+from .enums import Config
 from .control import control
 
-__all__ = ("Paginator", "Config")
-
-
-class Config(IntFlag):
-    DEFAULT = 0x1  # controller: first, previous, stop, next, last, input
-    MINIMAL = 0x2  # controller: previous, stop, next
-    PLAIN = 0x4  # controller: first, previous, stop, next
-    RICH = 0x8  # controller: all defaults + lock
+__all__ = ("Paginator",)
 
 
 class Paginator(Base):

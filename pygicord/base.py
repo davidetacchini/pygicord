@@ -1,24 +1,18 @@
 import asyncio
 
-from enum import IntFlag
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 import discord
 
 from discord.ext import commands
 
+from .enums import StopAction
 from .exceptions import *
 
 if TYPE_CHECKING:
     from .control import Control
 
-__all__ = ("Base", "StopAction", "StopPagination")
-
-
-class StopAction(IntFlag):
-    DO_NOTHING = 0x0
-    DELETE_MESSAGE = 0x1
-    CLEAR_REACTIONS = 0x2
+__all__ = ("Base", "StopPagination")
 
 
 class StopPagination(Exception):
