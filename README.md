@@ -23,6 +23,7 @@ An easy-to-use feature-rich pagination wrapper for discord.py
 * [Basic Paginator](#basic-paginator)
 * [Attributes](#attributes)
 * [Custom Emojis](#custom-emojis)
+* [Configuration](#config)
 * [Custom Paginator](#custom-paginator)
 * [New Paginator](#new-paginator)
 
@@ -104,7 +105,7 @@ async def test(ctx):
     await paginator.start(ctx)
 ```
 
-### Config
+### Configuration
 
 Config.RICH is the only config to have the lock set by default.
 You must set `force_lock` to True if you want to add it to all other configurations.
