@@ -245,7 +245,7 @@ class Base(metaclass=_BaseMeta):
         if not permissions.send_messages:
             raise CannotSendMessages()
 
-        # TODO: restrictive; maybe refactor
+        # TODO: restrictive; maybe use flag
         embed_links = any(isinstance(p, discord.Embed) for p in self.pages)
 
         if embed_links and not permissions.embed_links:
