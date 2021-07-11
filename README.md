@@ -17,6 +17,15 @@ An easy-to-use feature-rich pagination wrapper for discord.py
 	<img alt="PePy - Downloads" src="https://pepy.tech/badge/pygicord">
 </a>
 
+## Contents
+* [Installing](#installing)
+* [Getting Started](#getting-started)
+* [Basic Paginator](#basic-paginator)
+* [Attributes](#attributes)
+* [Custom Emojis](#custom-emojis)
+* [Custom Paginator](#custom-paginator)
+* [New Paginator](#new-paginator)A
+
 ## Installing
 
 ```shell
