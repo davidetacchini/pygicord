@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Union, Callable
 
-from discord import RawReactionActionEvent
-
 from .utils import ensure_coroutine
 
 if TYPE_CHECKING:
+    from discord import RawReactionActionEvent
+
     from .base import Base
 
     DisplayPredicate = Callable[[Base], bool]
