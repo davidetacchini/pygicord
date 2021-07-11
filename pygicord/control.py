@@ -91,7 +91,7 @@ def control(*, emoji: str, position: Union[int, float]):
     """Shorthand decorator for control creation.
 
     Supported emojis formats:
-        - Emoji: "🚀"
+        - Emoji: "🚀" (not recommended)
         - Unicode: "\U0001F680"
         - Unicode name: "\N{ROCKET}"
         - Custom emoji: ":custom_emoji:123456"

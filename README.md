@@ -67,7 +67,7 @@ async def test(ctx):
 | force_lock | Whether to force adding the lock.                           | bool                  | False           |
 
 Supported emojis formats:
-* Emoji: "🚀"
+* Emoji: "🚀" (not recommended)
 * Unicode: "\U0001F680"
 * Unicode name: "\N{ROCKET}"
 * Custom emoji: ":custom_emoji:123456"
