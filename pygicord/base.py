@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from typing import TYPE_CHECKING, Any, Mapping, List, Union
+from typing import TYPE_CHECKING, Any, List, Union, Mapping
 
 import discord
 

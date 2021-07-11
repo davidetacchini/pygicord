@@ -143,7 +143,9 @@ class Paginator(Base):
     def input_number_display_if(self):
         """Only displays when the pages are atleast 4."""
         return (
-            len(self) > 3 and self.config == Config.DEFAULT or self.config == Config.RICH
+            len(self) > 3
+            and self.config == Config.DEFAULT
+            or self.config == Config.RICH
         )
 
     @control(emoji="\N{LOCK}", position=6)
