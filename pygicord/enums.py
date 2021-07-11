@@ -10,7 +10,7 @@ class StopAction(Enum):
 
 
 class Config(Enum):
-    DEFAULT = 1  # controller: first, previous, stop, next, last, input
-    MINIMAL = 2  # controller: previous, stop, next
-    PLAIN = 3  # controller: first, previous, stop, next
-    RICH = 4  # controller: all defaults + lock
+    DEFAULT = 0  # controller: first, previous, stop, next, last, input
+    MINIMAL = 1  # controller: previous, stop, next
+    PLAIN = 2  # controller: first, previous, stop, next
+    RICH = 3  # controller: all defaults + lock
