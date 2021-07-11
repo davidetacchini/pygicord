@@ -124,7 +124,6 @@ from pygicord import Paginator, control
 
 
 class CustomPaginator(Paginator):
-
     @control(emoji="\N{INFORMATION SOURCE}", position=4.5)
     async def show_info(self, payload):
         """Shows this message."""
