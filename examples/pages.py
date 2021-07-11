@@ -6,6 +6,10 @@ from discord.ext import commands
 bot = commands.Bot(command_prefix=".")
 
 
+def make_contents():
+    return ["Page no. {i}" for i in range(1, 6)]
+
+
 def make_embeds():
     pages = []
     for i in range(1, 6):
@@ -13,10 +17,6 @@ def make_embeds():
         embed.title = f"I'm the embed {i}!"
         pages.append(embed)
     return pages
-
-
-def make_contents():
-    return ["Page no. {i}" for i in range(1, 6)]
 
 
 def make_both():
@@ -31,16 +31,16 @@ def make_both():
 
 
 @bot.command()
-async def embeds(ctx):
-    embeds = make_embeds()
-    paginator = Paginator(pages=embeds)
+async def contents(ctx):
+    contents = make_contents()
+    paginator = Paginator(pages=contents)
     await paginator.start(ctx)
 
 
 @bot.command()
-async def contents(ctx):
-    contents = make_contents()
-    paginator = Paginator(pages=contents)
+async def embeds(ctx):
+    embeds = make_embeds()
+    paginator = Paginator(pages=embeds)
     await paginator.start(ctx)
 
 
