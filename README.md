@@ -24,7 +24,7 @@ An easy-to-use feature-rich pagination wrapper for discord.py
 * [Attributes](#attributes)
 * [Custom Emojis](#custom-emojis)
 * [Custom Paginator](#custom-paginator)
-* [New Paginator](#new-paginator)A
+* [New Paginator](#new-paginator)
 
 ## Installing
 
