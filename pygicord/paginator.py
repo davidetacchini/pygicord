@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 
-from typing import Optional
+from typing import Any, Optional
 
 from discord import HTTPException
 
@@ -40,7 +42,7 @@ class Paginator(Base):
         emojis: Optional[dict] = None,
         config: Config = Config.DEFAULT,
         force_lock: bool = False,
-        **kwargs,
+        **kwargs: Any
     ) -> None:
         self.emojis = emojis
         self.config = config
@@ -69,7 +71,7 @@ class Paginator(Base):
     @first_page.display_if
     def first_page_display_if(self):
         """Only displays when the pages are atleast 4."""
-        return len(self) > 3 and self.config ^ Config.MINIMAL
+        return len(self) > 3 and self.config != Config.MINIMAL
 
     @control(emoji="\N{BLACK LEFT-POINTING TRIANGLE}", position=1)
     async def previous(self, payload):
@@ -99,7 +101,7 @@ class Paginator(Base):
     @last_page.display_if
     def last_page_display_if(self):
         """Only displays when the pages are atleast 4."""
-        return len(self) > 3 and self.config ^ Config.MINIMAL
+        return len(self) > 3 and self.config != Config.MINIMAL
 
     @control(emoji="\N{INPUT SYMBOL FOR NUMBERS}", position=5)
     async def input_number(self, payload):
@@ -141,7 +143,7 @@ class Paginator(Base):
     def input_number_display_if(self):
         """Only displays when the pages are atleast 4."""
         return (
-            len(self) > 3 and self.config & Config.DEFAULT or self.config & Config.RICH
+            len(self) > 3 and self.config == Config.DEFAULT or self.config == Config.RICH
         )
 
     @control(emoji="\N{LOCK}", position=6)
@@ -169,7 +171,7 @@ class Paginator(Base):
     def lock_unlock_display_if(self):
         """Hide in DMs."""
         return (
-            self.ctx.guild is not None and self.force_lock or self.config & Config.RICH
+            self.ctx.guild is not None and self.force_lock or self.config == Config.RICH
         )
 
     @lock_unlock.invoke_if

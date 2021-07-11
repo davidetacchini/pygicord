@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Mapping, List, Union
 
 import discord
 
@@ -11,6 +13,8 @@ from .exceptions import *
 
 if TYPE_CHECKING:
     from .control import Control
+
+    ControlT = Mapping[str, Control]
 
 __all__ = ("Base", "StopPagination")
 
@@ -30,7 +34,6 @@ class StopPagination(Exception):
         self.action = action
 
 
-# TODO: review
 class _BaseMeta(type):
     def __new__(cls, name, bases, attrs):
         cls_ = super().__new__(cls, name, bases, attrs)
@@ -104,7 +107,7 @@ class Base(metaclass=_BaseMeta):
 
         self._index: int = 0
         # override on startup
-        self._controller: Dict[str, "Control"] = {}
+        self._controller: ControlT = {}
 
         self._is_running: bool = False
         self.__tasks: List[asyncio.Task] = []
@@ -130,26 +133,25 @@ class Base(metaclass=_BaseMeta):
             self._index = index
 
     @property
-    def raw_controller(self) -> Dict[str, "Control"]:
+    def raw_controller(self) -> ControlT:
         """Get the raw controller."""
         return self.__class__.get_controller()
 
     @property
-    def controller(self) -> Dict[str, "Control"]:
+    def controller(self) -> ControlT:
         """Get the controller.
 
         Hidden controls are not included.
 
         Returns
         -------
-        Dict[str, Control]
-            A dictionary of Control instances with their
-            respective emoji as key.
+        Mapping[str, Control]
+            A mapping of control emoji to the Control instance.
         """
         return self._controller
 
     @controller.setter
-    def controller(self, controller: Dict[str, "Control"]) -> None:
+    def controller(self, controller: ControlT) -> None:
         self._controller = controller
 
     def _resolve_controller(self) -> None:
@@ -190,20 +192,20 @@ class Base(metaclass=_BaseMeta):
                 payload = done.pop().result()
                 await self.dispatch(payload)
         except StopPagination as e:
-            if e.action & StopAction.DO_NOTHING:
+            if e.action == StopAction.DO_NOTHING:
                 return
-            elif e.action & StopAction.DELETE_MESSAGE:
+            elif e.action == StopAction.DELETE_MESSAGE:
                 try:
                     await self.message.delete()
                 except discord.HTTPException:
                     return
-            elif e.action & StopAction.CLEAR_REACTIONS:
+            elif e.action == StopAction.CLEAR_REACTIONS:
                 try:
                     await self.message.clear_reactions()
                 except discord.HTTPException:
                     return
         finally:
-            # stop and cleanup
+            # stop session and cleanup all tasks
             self._is_running = False
             for task in self.__tasks:
                 task.cancel()

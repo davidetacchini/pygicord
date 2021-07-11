@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, List, Union, Callable
 
 from discord import RawReactionActionEvent
@@ -7,9 +9,8 @@ from .utils import ensure_coroutine
 if TYPE_CHECKING:
     from .base import Base
 
-InternalCallback = Callable[["Base", RawReactionActionEvent], None]
-DisplayPredicate = Callable[["Base"], bool]
-InvokePredicate = Callable[["Base", RawReactionActionEvent], bool]
+    DisplayPredicate = Callable[[Base], bool]
+    InvokePredicate = Callable[[Base, RawReactionActionEvent], bool]
 
 __all__ = ("Control", "control")
 
@@ -42,7 +43,11 @@ class Control:
     __ensure_control__ = ...
 
     def __init__(
-        self, *, emoji: str, callback: InternalCallback, position: Union[int, float]
+        self,
+        *,
+        emoji: str,
+        callback: Callable[[Base, RawReactionActionEvent], None],
+        position: Union[int, float]
     ) -> None:
         self.emoji = emoji
         self.callback = ensure_coroutine(callback)
@@ -55,7 +60,7 @@ class Control:
         """Returns the control emoji."""
         return self.emoji
 
-    async def __call__(self, base: "Base", payload: RawReactionActionEvent) -> None:
+    async def __call__(self, base: Base, payload: RawReactionActionEvent) -> None:
         """|coro|
 
         Calls the internal control callback.
@@ -79,7 +84,7 @@ class Control:
         self._invoke_preds.append(predicate)
         return predicate
 
-    def should_display(self, base) -> bool:
+    def should_display(self, base: Base) -> bool:
         """Returns whether a control should be displayed."""
         for pred in self._display_preds:
             if not pred(base):
