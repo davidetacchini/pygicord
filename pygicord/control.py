@@ -107,12 +107,12 @@ def control(*, emoji: str, position: Union[int, float]):
     -------
     class Paginator(Base):
         @control(emoji="\N{BLACK SQUARE FOR STOP}", position=0)
-        async def close(self, payload):
-            '''Stop the pagination session.'''
+        async def stop(self, payload):
+            '''Stop pagination.'''
             self.stop()
 
-        @close.invoke_if
-        async def close_invoke_if(self, payload):
+        @stop.invoke_if
+        async def stop_invoke_if(self, payload):
             '''Only the author can invoke it.'''
             return self.ctx.author.id == payload.user_id
     """
