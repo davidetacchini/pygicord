@@ -219,7 +219,7 @@ class Base(metaclass=_BaseMeta):
         ----------
         payload : discord.RawReactionActionEvent
             The payload containing all the information needed
-            from the cotrol coroutine to work properly.
+            for the control coroutine to work properly.
         """
         if payload.message_id != self.message.id:
             return
