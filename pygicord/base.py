@@ -87,7 +87,6 @@ class Base(metaclass=_BaseMeta):
         "_controller",
         "_is_running",
         "__tasks",
-        "__lock",
     )
 
     def __init__(self, *, pages: Union[Any, List[Any]], timeout: float = 90.0) -> None:
