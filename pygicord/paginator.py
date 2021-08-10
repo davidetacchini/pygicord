@@ -136,7 +136,7 @@ class Paginator(Base):
             try:
                 await prompt.delete()
                 await message.delete()
-            except HTTPException:
+            except (HTTPException, UnboundLocalError):
                 pass
 
     @input_number.display_if
