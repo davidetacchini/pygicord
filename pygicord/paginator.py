@@ -5,6 +5,7 @@ import asyncio
 from typing import Any, Optional
 
 from discord import HTTPException
+from discord.utils import cached_property
 
 from .base import Base, StopAction, StopPagination
 from .enums import Config
@@ -49,19 +50,17 @@ class Paginator(Base):
         self.force_lock = force_lock
         super().__init__(**kwargs)
 
-    def _resolve_controller(self) -> None:
-        """Resolve controller with custom emojis (if any)."""
-        controller = self.raw_controller
-
+    @cached_property
+    def controller(self):
+        """Override base controller property to use custom_emojis (if any)."""
         if self.emojis:
             for old, new in self.emojis.items():
                 try:
-                    controller[old].emoji = new
+                    self._controller[old].emoji = new
                 except KeyError:
                     pass
-
-        sorted_ = sorted(controller.values(), key=lambda c: c.position)
-        self.controller = {str(c): c for c in sorted_ if c.should_display(self)}
+        sorted_ = sorted(self._controller.values(), key=lambda c: c.position)
+        return {str(c): c for c in sorted_ if c.should_display(self)}
 
     @control(emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE}", position=0)
     async def first_page(self, payload):

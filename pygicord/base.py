@@ -105,8 +105,7 @@ class Base(metaclass=_BaseMeta):
         self.author: discord.Member = None
 
         self._index: int = 0
-        # override on startup
-        self._controller: ControlT = {}
+        self._controller: ControlT = self.__class__.get_controller()
 
         self._is_running: bool = False
         self.__tasks: List[asyncio.Task] = []
@@ -131,12 +130,7 @@ class Base(metaclass=_BaseMeta):
         if 0 <= index < len(self):
             self._index = index
 
-    @property
-    def raw_controller(self) -> ControlT:
-        """Get the raw controller."""
-        return self.__class__.get_controller()
-
-    @property
+    @discord.utils.cached_property
     def controller(self) -> ControlT:
         """Get the controller.
 
@@ -147,16 +141,8 @@ class Base(metaclass=_BaseMeta):
         Mapping[str, Control]
             A mapping of control emoji to the Control instance.
         """
-        return self._controller
-
-    @controller.setter
-    def controller(self, controller: ControlT) -> None:
-        self._controller = controller
-
-    def _resolve_controller(self) -> None:
-        """Resolve the controller."""
-        sorted_ = sorted(self.raw_controller.values(), key=lambda c: c.position)
-        self.controller = {str(c): c for c in sorted_ if c.should_display(self)}
+        sorted_ = sorted(self._controller.values(), key=lambda c: c.position)
+        return {str(c): c for c in sorted_ if c.should_display(self)}
 
     def _check(self, payload: discord.RawReactionActionEvent) -> bool:
         return (
@@ -206,9 +192,12 @@ class Base(metaclass=_BaseMeta):
         finally:
             # stop session and cleanup all tasks
             self._is_running = False
-            for task in self.__tasks:
-                task.cancel()
-            self.__tasks.clear()
+            self._tasks_cleanup()
+
+    def _tasks_cleanup(self):
+        for task in self.__tasks:
+            task.cancel()
+        self.__tasks.clear()
 
     async def dispatch(self, payload: discord.RawReactionActionEvent) -> None:
         """|coro|
@@ -233,7 +222,7 @@ class Base(metaclass=_BaseMeta):
         value = self.pages[index]
         if isinstance(value, dict):
             return value
-        if isinstance(value, str):
+        elif isinstance(value, str):
             return {"content": value, "embed": None}
         elif isinstance(value, discord.Embed):
             return {"content": None, "embed": value}
@@ -244,7 +233,6 @@ class Base(metaclass=_BaseMeta):
         if not permissions.send_messages:
             raise CannotSendMessages()
 
-        # TODO: restrictive; maybe use flag
         embed_links = any(isinstance(p, discord.Embed) for p in self.pages)
 
         if embed_links and not permissions.embed_links:
@@ -298,6 +286,11 @@ class Base(metaclass=_BaseMeta):
         ValueError
             Pages is an empty list.
         """
+        try:
+            del self.controller
+        except AttributeError:
+            pass
+
         self.ctx = ctx
         self.bot = ctx.bot
         self.author = ctx.author
@@ -309,7 +302,7 @@ class Base(metaclass=_BaseMeta):
             self.message = await ctx.send(**kwargs)
 
         if self.should_add_reactions():
-            self._resolve_controller()
+            self._tasks_cleanup()
             self._is_running = True
             self.__tasks.append(self.loop.create_task(self._run()))
             self.__tasks.append(self.loop.create_task(self.add_reactions()))
