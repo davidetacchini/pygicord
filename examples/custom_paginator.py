@@ -3,7 +3,8 @@ import discord
 from pygicord import Paginator, control
 from discord.ext import commands
 
-bot = commands.Bot(command_prefix=".")
+intents = discord.Intents.default()
+bot = commands.Bot(command_prefix=".", intents=intents)
 
 
 class CustomPaginator(Paginator):
