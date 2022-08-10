@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from typing import TYPE_CHECKING, List, Union, Mapping, Optional, Sequence
+from typing import TYPE_CHECKING, Any, List, Union, Mapping, Optional, Sequence
 
 import discord
 
@@ -30,7 +30,7 @@ class StopPagination(Exception):
 
     __slots__ = "action"
 
-    def __init__(self, action: StopAction):
+    def __init__(self, action: StopAction) -> None:
         self.action = action
 
 
@@ -48,7 +48,7 @@ class _BaseMeta(type):
         cls_.__controls__ = controls
         return cls_
 
-    def get_controller(cls):
+    def get_controller(cls) -> Mapping[str, Control]:
         controller = {}
         for control in cls.__controls__:
             controller[str(control)] = control
@@ -191,7 +191,7 @@ class Base(metaclass=_BaseMeta):
             self._is_running = False
             self._tasks_cleanup()
 
-    def _tasks_cleanup(self):
+    def _tasks_cleanup(self) -> None:
         for task in self.__tasks:
             task.cancel()
         self.__tasks.clear()
@@ -215,7 +215,7 @@ class Base(metaclass=_BaseMeta):
             control = self.controller[emoji]
             await control(self, payload)
 
-    def _get_kwargs_from_page(self, index: int = 0) -> dict:
+    def _get_kwargs_from_page(self, index: int = 0) -> dict[str, Any]:
         value = self.pages[index]
         if isinstance(value, dict):
             return value
