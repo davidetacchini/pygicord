@@ -71,7 +71,7 @@ async def test(ctx):
 | Name        | Description                                                 | Type                  | Default         |
 |-------------|-------------------------------------------------------------|-----------------------|-----------------|
 | pages       | A list of objects to paginate or just one.                  | Union[Any, List[Any]] |                 |
-| embed_links | Whether to check for Embed Links permission.                | bool                  | False           |
+| embed_links | Whether to check for Embed Links permission.                | bool                  | True            |
 | timeout     | The timeout to wait before stopping the pagination session. | float                 | 90.0            |
 | emojis      | The custom emojis to use.                                   | dict                  | Discord natives |
 | config      | The configuration to use.                                   | pygicord.Config       | Config.DEFAULT  |
