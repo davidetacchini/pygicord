@@ -9,10 +9,10 @@ import discord
 from discord.ext import commands
 
 from .enums import StopAction
+from .control import Control
 from .exceptions import *
 
 if TYPE_CHECKING:
-    from .control import Control
 
     PageT = Union[discord.Embed, str, Sequence[Union[discord.Embed, str]]]
 
