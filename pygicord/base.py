@@ -147,7 +147,7 @@ class Base(metaclass=_BaseMeta):
             or payload.user_id == self.author.id
             and payload.user_id != self.bot.user.id
             and payload.message_id == self.message.id
-            and str(payload.emoji) in self.controller
+            and str(payload.emoji) in self.controller.keys()
         )
 
     async def _run(self) -> None:
@@ -212,7 +212,7 @@ class Base(metaclass=_BaseMeta):
 
         if self._is_running:
             emoji = str(payload.emoji)
-            control = self.controller[emoji]
+            control = self.controller.get(emoji)
             await control(self, payload)
 
     def _get_kwargs_from_page(self, index: int = 0) -> dict[str, Any]:
@@ -247,7 +247,7 @@ class Base(metaclass=_BaseMeta):
         return len(self) > 1
 
     async def add_reactions(self) -> None:
-        for emoji in self.controller:
+        for emoji in self.controller.keys():
             await self.message.add_reaction(emoji)
 
     async def show_page(self, index: int) -> None:
