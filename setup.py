@@ -5,9 +5,7 @@ from setuptools import setup
 
 version = ""
 with open("pygicord/__init__.py") as fp:
-    version = re.search(
-        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fp.read(), re.MULTILINE
-    ).group(1)
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fp.read(), re.MULTILINE).group(1)
 
 
 if not version:
