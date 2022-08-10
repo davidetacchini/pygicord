@@ -1,0 +1,16 @@
+{
+    "include": [
+        "pygicord",
+        "examples"
+    ],
+    "exclude": [
+        "**/__pycache__",
+        "env"
+    ],
+    "pythonVersion": "3.8",
+    "typeCheckingMode": "basic",
+    "reportUnusedImport": "error",
+    "reportUnnecessaryTypeIgnoreComment": "warning",
+    "reportUnnecessaryCast": "warning",
+    "reportOptionalMemberAccess": "none"
+}
