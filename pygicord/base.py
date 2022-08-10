@@ -64,6 +64,8 @@ class Base(metaclass=_BaseMeta):
     ----------
     pages : Union[discord.Embed, str, Sequence[Union[discord.Embed, str]]]]
         A list of objects to paginate or just one.
+    embed_links : bool, default: False
+        Whether to check for Embed Links permission as well.
     timeout : float, default: 90.0
         The timeout to wait before stopping the paginator session.
 
@@ -76,6 +78,7 @@ class Base(metaclass=_BaseMeta):
     __slots__ = (
         "pages",
         "timeout",
+        "embed_links",
         "ctx",
         "bot",
         "message",
@@ -86,7 +89,7 @@ class Base(metaclass=_BaseMeta):
         "__tasks",
     )
 
-    def __init__(self, *, pages: PageT, timeout: float = 90.0) -> None:
+    def __init__(self, *, pages: PageT, embed_links: bool = False, timeout: float = 90.0) -> None:
         if isinstance(pages, (discord.Embed, str)):
             pages = [pages]
 
@@ -94,6 +97,7 @@ class Base(metaclass=_BaseMeta):
             raise ValueError("Cannot paginate an empty list.")
 
         self.pages = pages
+        self.embed_links = embed_links
         self.timeout = timeout
 
         self.ctx: Optional[commands.Context] = None
@@ -230,9 +234,7 @@ class Base(metaclass=_BaseMeta):
         if not permissions.send_messages:
             raise CannotSendMessages()
 
-        embed_links = any(isinstance(p, discord.Embed) for p in self.pages)
-
-        if embed_links and not permissions.embed_links:
+        if self.embed_links and not permissions.embed_links:
             raise CannotEmbedLinks()
 
         if self.should_add_reactions():
