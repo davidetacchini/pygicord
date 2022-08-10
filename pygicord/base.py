@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from typing import TYPE_CHECKING, Any, List, Union, Mapping
+from typing import TYPE_CHECKING, List, Union, Mapping, Optional, Sequence
 
 import discord
 
@@ -14,7 +14,7 @@ from .exceptions import *
 if TYPE_CHECKING:
     from .control import Control
 
-    ControlT = Mapping[str, Control]
+    PageT = Union[discord.Embed, str, Sequence[Union[discord.Embed, str]]]
 
 __all__ = ("Base", "StopPagination")
 
@@ -36,16 +36,13 @@ class StopPagination(Exception):
 
 class _BaseMeta(type):
     def __new__(cls, name, bases, attrs):
-        cls_ = super().__new__(cls, name, bases, attrs)
+        cls.__controls__: List[Control]  # this fixes generalTypeIssue
         controls = []
+        cls_ = super().__new__(cls, name, bases, attrs)
 
         for base in reversed(cls_.__mro__):
             for elem, value in base.__dict__.items():
-                try:
-                    value.__ensure_control__
-                except AttributeError:
-                    continue
-                else:
+                if isinstance(value, Control):
                     controls.append(value)
 
         cls_.__controls__ = controls
@@ -65,7 +62,7 @@ class Base(metaclass=_BaseMeta):
 
     Attributes
     ----------
-    pages : Union[Any, List[Any]]
+    pages : Union[discord.Embed, str, Sequence[Union[discord.Embed, str]]]]
         A list of objects to paginate or just one.
     timeout : float, default: 90.0
         The timeout to wait before stopping the paginator session.
@@ -89,8 +86,8 @@ class Base(metaclass=_BaseMeta):
         "__tasks",
     )
 
-    def __init__(self, *, pages: Union[Any, List[Any]], timeout: float = 90.0) -> None:
-        if not isinstance(pages, list):
+    def __init__(self, *, pages: PageT, timeout: float = 90.0) -> None:
+        if isinstance(pages, (discord.Embed, str)):
             pages = [pages]
 
         if not len(pages):
@@ -99,13 +96,13 @@ class Base(metaclass=_BaseMeta):
         self.pages = pages
         self.timeout = timeout
 
-        self.ctx: commands.Context = None
-        self.bot: discord.Client = None
-        self.message: discord.Message = None
-        self.author: discord.Member = None
+        self.ctx: Optional[commands.Context] = None
+        self.bot: Optional[discord.Client] = None
+        self.message: Optional[discord.Message] = None
+        self.author: Optional[Union[discord.User, discord.Member]] = None
 
         self._index: int = 0
-        self._controller: ControlT = self.__class__.get_controller()
+        self._controller: Mapping[str, Control] = self.__class__.get_controller()
 
         self._is_running: bool = False
         self.__tasks: List[asyncio.Task] = []
@@ -131,7 +128,7 @@ class Base(metaclass=_BaseMeta):
             self._index = index
 
     @discord.utils.cached_property
-    def controller(self) -> ControlT:
+    def controller(self) -> Mapping[str, Control]:
         """Get the controller.
 
         Hidden controls are not included.
@@ -218,7 +215,7 @@ class Base(metaclass=_BaseMeta):
             control = self.controller[emoji]
             await control(self, payload)
 
-    def _get_page_kwargs(self, index: int = 0) -> dict:
+    def _get_kwargs_from_page(self, index: int = 0) -> dict:
         value = self.pages[index]
         if isinstance(value, dict):
             return value
@@ -264,7 +261,7 @@ class Base(metaclass=_BaseMeta):
             The the page's index to jump to.
         """
         self.index = index
-        kwargs = self._get_page_kwargs(self.index)
+        kwargs = self._get_kwargs_from_page(self.index)
         await self.message.edit(**kwargs)
 
     async def start(self, ctx: commands.Context) -> None:
@@ -294,11 +291,13 @@ class Base(metaclass=_BaseMeta):
         self.ctx = ctx
         self.bot = ctx.bot
         self.author = ctx.author
-        permissions = ctx.channel.permissions_for(ctx.me)
-        self._ensure_permissions(permissions)
+
+        if ctx.guild is not None:  # if DMs don't check for permissions
+            permissions = ctx.channel.permissions_for(ctx.guild.me)
+            self._ensure_permissions(permissions)
 
         if self.message is None:
-            kwargs = self._get_page_kwargs()
+            kwargs = self._get_kwargs_from_page()
             self.message = await ctx.send(**kwargs)
 
         if self.should_add_reactions():

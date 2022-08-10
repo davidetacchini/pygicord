@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Union, Callable
+from typing import TYPE_CHECKING, List, Union, TypeVar, Callable
 
 from .utils import ensure_coroutine
 
@@ -9,8 +9,11 @@ if TYPE_CHECKING:
 
     from .base import Base
 
-    DisplayPredicate = Callable[[Base], bool]
-    InvokePredicate = Callable[[Base, RawReactionActionEvent], bool]
+    T = TypeVar("T", bound=Base)
+
+    DisplayPredicate = Callable[[T], bool]
+    InvokePredicate = Callable[[T, RawReactionActionEvent], bool]
+
 
 __all__ = ("Control", "control")
 
@@ -39,15 +42,12 @@ class Control:
         "_invoke_preds",
     )
 
-    # used in Base metaclass to ensure that the value is a control
-    __ensure_control__ = ...
-
     def __init__(
         self,
         *,
         emoji: str,
         callback: Callable[[Base, RawReactionActionEvent], None],
-        position: Union[int, float]
+        position: Union[int, float],
     ) -> None:
         self.emoji = emoji
         self.callback = ensure_coroutine(callback)
