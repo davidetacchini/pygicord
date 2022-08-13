@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from typing import TYPE_CHECKING, Any, List, Union, Mapping, Optional, Sequence
+from typing import Any, List, Union, Mapping, Optional
 
 import discord
 
@@ -11,10 +11,6 @@ from discord.ext import commands
 from .enums import StopAction
 from .control import Control
 from .exceptions import *
-
-if TYPE_CHECKING:
-
-    PageT = Union[discord.Embed, str, Sequence[Union[discord.Embed, str]]]
 
 __all__ = ("Base", "StopPagination")
 
@@ -62,7 +58,7 @@ class Base(metaclass=_BaseMeta):
 
     Attributes
     ----------
-    pages : Union[discord.Embed, str, Sequence[Union[discord.Embed, str]]]]
+    pages : Union[Any, List[Any]]
         A list of objects to paginate or just one.
     embed_links : bool, default: True
         Whether to check for Embed Links permission as well.
@@ -89,7 +85,9 @@ class Base(metaclass=_BaseMeta):
         "__tasks",
     )
 
-    def __init__(self, *, pages: PageT, embed_links: bool = True, timeout: float = 90.0) -> None:
+    def __init__(
+        self, *, pages: Union[Any, List[Any]], embed_links: bool = True, timeout: float = 90.0
+    ) -> None:
         if isinstance(pages, (discord.Embed, str)):
             pages = [pages]
 
