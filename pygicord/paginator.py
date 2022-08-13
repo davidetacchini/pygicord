@@ -22,13 +22,13 @@ class Paginator(Base):
 
     Attributes
     ----------
-    pages : Union[discord.Embed, str, Sequence[Union[discord.Embed, str]]]]
+    pages : Union[Any, List[Any]]
         A list of objects to paginate or just one.
     embed_links : bool, default: True
         Whether to check for Embed Links permission as well.
     timeout : float, default: 90.0
         The timeout to wait before stopping the paginator session.
-    emojis : dict
+    emojis : Mapping[str, str]
         The custom emojis to use.
     config : Config, default: Config.DEFAULT
         The configuration to use.
@@ -57,7 +57,7 @@ class Paginator(Base):
 
     @cached_property
     def controller(self) -> Mapping[str, Control]:
-        """Override base controller property to use custom_emojis (if any)."""
+        """Override base controller property to use custom emojis (if any)."""
         if self.emojis:
             for old, new in self.emojis.items():
                 try:
