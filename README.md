@@ -73,9 +73,12 @@ async def test(ctx):
 | pages       | A list of objects to paginate or just one.                  | Union[Any, List[Any]] |                 |
 | embed_links | Whether to check for Embed Links permission.                | bool                  | True            |
 | timeout     | The timeout to wait before stopping the pagination session. | float                 | 90.0            |
-| emojis      | The custom emojis to use.                                   | dict                  | Discord natives |
+| emojis      | The custom emojis to use.                                   | Mapping[str, str]     | Discord natives |
 | config      | The configuration to use.                                   | pygicord.Config       | Config.DEFAULT  |
 | force_lock  | Whether to force adding the lock.                           | bool                  | False           |
+
+emojis attribute is a Mapping of old emoji codes to new emoji codes. Keep reading to understand how to set your custom emojis.
+force_lock adds a reaction that allows the author of the message to share/unshare the reaction controller to other server members.
 
 Supported emojis formats:
 * Emoji: "🚀" (not recommended)
@@ -108,15 +111,25 @@ async def test(ctx):
 
 ### Configuration
 
-Config.RICH is the only config to have the lock set by default.
+Config.RICH is the only configuration to have the lock set by default.
 You must set `force_lock` to True if you want to add it to all other configurations.
 
-| Type           | Buttons                                        |
+| Type           | Controller                                     |
 |----------------|------------------------------------------------|
 | Config.DEFAULT | first, previous, stop, next, last, input       |
-| Config.MINIMAL |        previous, stop, next                    |
+| Config.MINIMAL | previous, stop, next                           |
 | Config.PLAIN   | first, previous, stop, next, last              |
 | Config.RICH    | first, previous, stop, next, last, input, lock |
+
+| Control  | Action                                                         |
+|----------|----------------------------------------------------------------|
+| first    | Jump to first page                                             |
+| previous | Go to next page                                                |
+| stop     | Stop pagination session                                        |
+| next     | Go to next page                                                |
+| last     | Jump to last page                                              |
+| input    | Enter a page number to jump to                                 |
+| input    | Share/unshare the reaction controller to other server members. |
 
 ```py
 from pygicord import Config, Paginator
@@ -187,3 +200,5 @@ async def test(ctx):
     paginator = MyPaginator(pages=pages)
     await paginator.start(ctx)
 ```
+
+You can find more examples in the examples folder.
