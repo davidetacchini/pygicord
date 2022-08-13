@@ -77,8 +77,8 @@ async def test(ctx):
 | config      | The configuration to use.                                   | pygicord.Config       | Config.DEFAULT  |
 | force_lock  | Whether to force adding the lock.                           | bool                  | False           |
 
-emojis attribute is a Mapping of old emoji codes to new emoji codes. Keep reading to understand how to set your custom emojis.
-force_lock adds a reaction that allows the author of the message to share/unshare the reaction controller to other server members.
+* emojis attribute is a Mapping of old emoji codes to new emoji codes. Keep reading to understand how to set your custom emojis.
+* force_lock adds a reaction that allows the author of the message to share/unshare the reaction controller to other server members.
 
 Supported emojis formats:
 * Emoji: "🚀" (not recommended)
@@ -201,4 +201,4 @@ async def test(ctx):
     await paginator.start(ctx)
 ```
 
-You can find more examples in the examples folder.
+You can find more exhaustive examples in the examples folder.
