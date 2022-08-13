@@ -22,8 +22,10 @@ class Paginator(Base):
 
     Attributes
     ----------
-    pages : Union[Any, List[Any]]
+    pages : Union[discord.Embed, str, Sequence[Union[discord.Embed, str]]]]
         A list of objects to paginate or just one.
+    embed_links : bool, default: True
+        Whether to check for Embed Links permission as well.
     timeout : float, default: 90.0
         The timeout to wait before stopping the paginator session.
     emojis : dict
