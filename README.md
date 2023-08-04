@@ -1,12 +1,9 @@
-# Pygicord
+# Pygicord [ARCHIVED]
 An easy-to-use feature-rich pagination wrapper for discord.py
 
-<a href="https://github.com/davidetacchini/pygicord/actions" traget="_blank">
-	<img src="https://github.com/davidetacchini/pygicord/workflows/Lint/badge.svg" alt="Lint">
-</a>
-<a href="https://github.com/davidetacchini/pygicord/actions" traget="_blank">
-	<img src="https://github.com/davidetacchini/pygicord/workflows/Deploy/badge.svg" alt="Deploy">
-</a>
+> **Note**
+> This project has been archived and will no longer be updated.
+
 <a href="https://pypi.org/project/pygicord" traget="_blank">
    <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/pygicord"> 
 </a>
