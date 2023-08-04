@@ -1,4 +1,8 @@
 # Pygicord [ARCHIVED]
+
+> **Important**
+> This project has been archived and will no longer be updated.
+
 An easy-to-use feature-rich pagination wrapper for discord.py
 
 <a href="https://pypi.org/project/pygicord" traget="_blank">
@@ -10,9 +14,6 @@ An easy-to-use feature-rich pagination wrapper for discord.py
 <a href="https://pepy.tech/project/pygicord" traget="_blank">
 	<img alt="PePy - Downloads" src="https://pepy.tech/badge/pygicord">
 </a>
-
-> **Important**
-> This project has been archived and will no longer be updated.
 
 ## Contents
 * [Installing](#installing)
