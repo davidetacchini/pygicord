@@ -1,9 +1,6 @@
 # Pygicord [ARCHIVED]
 An easy-to-use feature-rich pagination wrapper for discord.py
 
-> **Note**
-> This project has been archived and will no longer be updated.
-
 <a href="https://pypi.org/project/pygicord" traget="_blank">
    <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/pygicord"> 
 </a>
@@ -13,6 +10,9 @@ An easy-to-use feature-rich pagination wrapper for discord.py
 <a href="https://pepy.tech/project/pygicord" traget="_blank">
 	<img alt="PePy - Downloads" src="https://pepy.tech/badge/pygicord">
 </a>
+
+> **Important**
+> This project has been archived and will no longer be updated.
 
 ## Contents
 * [Installing](#installing)
@@ -36,9 +36,8 @@ or via git:
 pip install git+https://github.com/davidetacchini/pygicord
 ```
 
-### Note
-
-It is recommended using the latest stable version of <a href="https://discordpy.readthedocs.io/en/stable/">discord.py</a>.
+> **Note**
+> It is recommended using the latest stable version of <a href="https://discordpy.readthedocs.io/en/stable/">discord.py</a>.
 
 ## Getting Started
 
